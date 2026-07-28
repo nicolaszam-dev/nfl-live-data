@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const response = await fetch('https://cdn.espn.com/core/nfl/standings?xhr=1');
+    const response = await fetch('https://site.web.api.espn.com/apis/v2/sports/football/nfl/standings');
     const data = await response.json();
     res.status(200).json(data);
   } catch (error) {
