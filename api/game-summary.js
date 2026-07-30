@@ -18,7 +18,19 @@ export default async function handler(req, res) {
       }))
     }));
 
-    res.status(200).json({ teams });
+    let winProbability = null;
+    const wp = raw.winprobability;
+    if (Array.isArray(wp) && wp.length > 0) {
+      const latest = wp[wp.length - 1];
+      if (typeof latest.homeWinPercentage === 'number') {
+        winProbability = {
+          home: Math.round(latest.homeWinPercentage * 100),
+          away: Math.round((1 - latest.homeWinPercentage) * 100)
+        };
+      }
+    }
+
+    res.status(200).json({ teams, winProbability });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch game summary', details: String(error) });
   }
