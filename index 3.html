@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NFL by Nico">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20220%20220%27%3E%3Crect%20x%3D%2710%27%20y%3D%2710%27%20width%3D%27200%27%20height%3D%27200%27%20rx%3D%2744%27%20fill%3D%27%2312161B%27/%3E%3Cpath%20d%3D%27M92%2060%20L128%2060%20L128%2072%20C128%2088%20118%2098%20110%2098%20C102%2098%2092%2088%2092%2072%20Z%27%20fill%3D%27%23D4AF37%27/%3E%3Cpath%20d%3D%27M92%2064%20C82%2064%2078%2072%2086%2078%20M128%2064%20C138%2064%20142%2072%20134%2078%27%20stroke%3D%27%23D4AF37%27%20stroke-width%3D%273%27%20fill%3D%27none%27/%3E%3Crect%20x%3D%27106%27%20y%3D%2798%27%20width%3D%278%27%20height%3D%2710%27%20fill%3D%27%23D4AF37%27/%3E%3Crect%20x%3D%2798%27%20y%3D%27108%27%20width%3D%2724%27%20height%3D%278%27%20rx%3D%272%27%20fill%3D%27%23D4AF37%27/%3E%3C/svg%3E">
+<title>NFL by Nico</title>
+<style>
+:root{
+  --bg: #0B0E11;
+  --bg-elevated: #12161B;
+  --bg-card: #171C22;
+  --line: #232A32;
+  --turf: #3FD16D;
+  --turf-glow: #4ADE80;
+  --danger: #E5484D;
+  --gold: #D4AF37;
+  --steel: #8A93A3;
+  --steel-dim: #5A6270;
+  --white: #F4F6F8;
+  --afc: #D2232A;
+  --nfc: #013369;
+  safe-top: env(safe-area-inset-top);
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  background: radial-gradient(circle at 50% -10%, #151b21 0%, #0B0E11 55%), var(--bg);
+  color: var(--white);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x:hidden;
+  min-height:100vh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@font-face{
+  font-family:'Teko';
+  src: local('Teko');
+}
+.display{
+  font-family: 'Teko', 'Oswald', 'Arial Narrow', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+::-webkit-scrollbar{ display:none; }
+* { scrollbar-width: none; }
+
+/* ---------- App shell ---------- */
+#app{ max-width: 560px; margin: 0 auto; min-height:100vh; position:relative; padding-bottom: 92px; }
+
+/* Top bar */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 18px 20px 10px;
+  position: sticky; top:0; z-index: 40;
+  background: linear-gradient(to bottom, rgba(11,14,17,0.97) 70%, rgba(11,14,17,0));
+  backdrop-filter: blur(6px);
+}
+.brand{ display:flex; align-items:center; gap:10px; }
+.brand-mark{
+  width:34px; height:34px; border-radius:9px;
+  background: #12161B; border: 1px solid rgba(212,175,55,0.3);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 0 14px rgba(212,175,55,0.2);
+}
+.brand-mark svg{ width:22px; height:22px; }
+.brand-text{ font-family:'Teko',sans-serif; font-size: 26px; font-weight:600; letter-spacing:0.02em; line-height:1;}
+.brand-text span{ color: var(--gold); }
+.status-dot{ width:8px; height:8px; border-radius:50%; background: var(--steel-dim); }
+.status-dot.live{ background: var(--turf); box-shadow: 0 0 8px var(--turf-glow); animation: pulse 1.6s infinite; }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+.updated-label{ font-size:11px; color: var(--steel-dim); display:flex; align-items:center; gap:6px; }
+
+/* Views */
+.view{ display:none; padding: 4px 16px 20px; animation: fadeIn 0.25s ease; }
+.view.active{ display:block; }
+@keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+.section-label{
+  font-family:'Teko',sans-serif; font-size:15px; letter-spacing:0.14em; text-transform:uppercase;
+  color: var(--steel); margin: 22px 4px 10px; display:flex; align-items:center; gap:8px;
+}
+.section-label::before{ content:''; width:3px; height:14px; background: var(--turf); border-radius:2px; }
+
+/* Conference toggle */
+.conf-toggle{
+  display:flex; background: var(--bg-elevated); border-radius:12px; padding:4px; margin: 8px 4px 4px;
+  border:1px solid var(--line);
+}
+.conf-btn{
+  flex:1; text-align:center; padding:10px 0; border-radius:9px; font-family:'Teko',sans-serif;
+  font-size:17px; letter-spacing:0.05em; color: var(--steel); background:none; border:none; font-weight:600;
+}
+.conf-btn.active{ background: var(--bg-card); color: var(--white); box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset; }
+.conf-btn.active.afc{ color: #ff5a60; }
+.conf-btn.active.nfc{ color: #6f9fff; }
+
+/* Division tile (home screen "world select") */
+.division-grid{ display:flex; flex-direction:column; gap:10px; margin: 4px 4px 0; }
+.division-tile{
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+  border:2px solid var(--line);
+  border-radius:20px;
+  padding:14px 16px;
+  position:relative; overflow:hidden;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+}
+.division-tile::after{
+  content:''; position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%;
+  background: radial-gradient(circle, rgba(63,209,109,0.08), transparent 70%);
+}
+.division-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+.division-name{ font-family:'Teko',sans-serif; font-size:20px; letter-spacing:0.04em; color: var(--white); }
+.division-lead-tag{ font-size:10px; color: var(--gold); letter-spacing:0.08em; text-transform:uppercase; font-weight:600; }
+.team-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 9px 6px; border-radius:10px;
+}
+.team-row{ transition: transform 0.1s ease; cursor:pointer; }
+.team-row:active{ background: rgba(255,255,255,0.06); transform: scale(0.97); }
+.team-row + .team-row{ border-top: 1px solid rgba(255,255,255,0.03); }
+.team-left{ display:flex; align-items:center; gap:11px; }
+.team-crest{
+  width:38px; height:38px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; padding-bottom:3px;
+  font-family:'Teko',sans-serif; font-weight:700; font-size:15px;
+  color:#fff; letter-spacing:0.02em;
+  border: 2px solid rgba(255,255,255,0.22);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.35), 0 3px 8px rgba(0,0,0,0.3);
+  clip-path: polygon(50% 0%, 100% 15%, 100% 65%, 50% 100%, 0% 65%, 0% 15%);
+}
+.team-name{ font-size:14px; font-weight:600; }
+.team-sub{ font-size:11px; color: var(--steel-dim); margin-top:1px; }
+.team-right{ text-align:right; display:flex; align-items:center; gap:10px; }
+.team-record{ font-family:'Teko',sans-serif; font-size:18px; color: var(--steel); }
+.rank-badge{
+  width:20px; height:20px; border-radius:5px; background: var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Teko',sans-serif; font-size:12px; color: var(--steel-dim); flex-shrink:0;
+}
+.rank-badge.clinch-division{ background: rgba(212,175,55,0.15); color: var(--gold); }
+.rank-badge.clinch-conference,.rank-badge.clinch-1{ background: rgba(212,175,55,0.25); color: var(--gold); }
+.rank-badge.clinch-wildcard{ background: rgba(63,209,109,0.15); color: var(--turf); }
+.rank-badge.clinch-eliminated{ background: rgba(229,72,77,0.08); color: var(--steel-dim); }
+
+/* Team detail */
+.team-hero{
+  border-radius:20px; padding:24px 18px 18px; margin: 4px 4px 0; position:relative; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+}
+.team-hero-crest{
+  width:76px; height:76px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+  font-family:'Teko',sans-serif; font-weight:700; font-size:34px; color:#fff; margin-bottom:12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.team-hero-name{ font-family:'Teko',sans-serif; font-size:32px; letter-spacing:0.02em; }
+.team-hero-meta{ font-size:12px; color: var(--steel); margin-top:4px; letter-spacing:0.04em;}
+.team-hero-record{ display:flex; gap:22px; margin-top:16px; }
+.hero-stat{ text-align:center; }
+.hero-stat-val{ font-family:'Teko',sans-serif; font-size:26px; }
+.hero-stat-label{ font-size:9px; color: var(--steel-dim); text-transform:uppercase; letter-spacing:0.1em; }
+
+.tab-row{ display:flex; gap:8px; margin: 18px 4px 4px; }
+.tab-btn{
+  flex:1; padding:9px 0; border-radius:10px; background: var(--bg-elevated); border:1px solid var(--line);
+  font-size:12px; font-weight:600; color: var(--steel); text-align:center;
+}
+.tab-btn.active{ background: rgba(63,209,109,0.12); border-color: rgba(63,209,109,0.4); color: var(--turf); }
+
+.player-card{
+  background: var(--bg-card); border:1px solid var(--line); border-radius:14px;
+  padding:13px 14px; margin: 8px 4px; display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; transition: transform 0.1s ease;
+}
+.player-card:active{ transform: scale(0.97); background: rgba(255,255,255,0.04); }
+.player-left{ display:flex; align-items:center; gap:12px; }
+.player-num{
+  width:36px; height:36px; border-radius:8px; background: var(--bg-elevated);
+  display:flex; align-items:center; justify-content:center; font-family:'Teko',sans-serif; font-size:16px; color: var(--steel);
+  flex-shrink:0;
+}
+.player-name{ font-size:14px; font-weight:600; }
+.player-pos{ font-size:11px; color: var(--steel-dim); }
+.player-stat-line{ font-family:'Teko',sans-serif; font-size:15px; color: var(--turf); text-align:right; }
+.player-stat-sub{ font-size:10px; color: var(--steel-dim); text-align:right; }
+
+/* Predictions / Matchup */
+.matchup-card{
+  background: var(--bg-card); border:1px solid var(--line); border-radius:18px; padding:18px; margin: 10px 4px;
+}
+.matchup-top{ display:flex; align-items:center; justify-content:space-between; }
+.matchup-team{ display:flex; flex-direction:column; align-items:center; gap:8px; width:38%; }
+.matchup-crest{
+  width:56px; height:56px; display:flex; align-items:center; justify-content:center; padding-bottom:4px;
+  font-family:'Teko',sans-serif; font-weight:700; font-size:24px; color:#fff;
+  border: 2px solid rgba(255,255,255,0.22);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.35), 0 4px 10px rgba(0,0,0,0.3);
+  clip-path: polygon(50% 0%, 100% 15%, 100% 65%, 50% 100%, 0% 65%, 0% 15%);
+}
+.matchup-abbr{ font-family:'Teko',sans-serif; font-size:16px; }
+.matchup-vs{ font-family:'Teko',sans-serif; font-size:22px; color: var(--gold); letter-spacing:0.05em; transform: rotate(-6deg); text-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+.prob-bar{
+  height:14px; border-radius:7px; background: var(--bg-elevated); margin: 16px 0 6px; overflow:hidden;
+  display:flex; position:relative; border:1px solid var(--line);
+}
+.prob-fill-a{ background: linear-gradient(90deg, #3FD16D, #2fae5a); height:100%; transition: width 1s cubic-bezier(.22,1,.36,1); }
+.prob-fill-b{ background: linear-gradient(90deg, #4a5568, #2d3440); height:100%; transition: width 1s cubic-bezier(.22,1,.36,1); }
+.prob-labels{ display:flex; justify-content:space-between; font-family:'Teko',sans-serif; font-size:14px; color: var(--steel); margin-bottom:4px;}
+.prob-labels .lead{ color: var(--turf); }
+.matchup-note{ font-size:11px; color: var(--steel-dim); margin-top:10px; line-height:1.5; border-top:1px solid var(--line); padding-top:10px; }
+
+/* My Teams quick row */
+.my-teams-row{ display:flex; gap:10px; overflow-x:auto; padding: 6px 4px 14px; -webkit-overflow-scrolling:touch; }
+.my-teams-row::-webkit-scrollbar{ display:none; }
+.my-team-card{
+  flex-shrink:0; width:84px; background: var(--bg-card); border:1px solid var(--line); border-radius:14px;
+  padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;
+}
+.my-team-card:active{ transform: scale(0.96); }
+.my-team-crest{
+  width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+  font-family:'Teko',sans-serif; font-weight:700; font-size:16px; color:#fff;
+  border:2px solid rgba(255,255,255,0.2);
+  clip-path: polygon(50% 0%, 100% 15%, 100% 65%, 50% 100%, 0% 65%, 0% 15%);
+}
+.my-team-name{ font-size:10px; font-weight:600; text-align:center; line-height:1.2; }
+.my-team-record{ font-family:'Teko',sans-serif; font-size:14px; color: var(--steel); }
+
+/* Game detail stat comparison */
+.stat-row{ margin: 14px 4px; }
+.stat-row-labels{ display:flex; justify-content:space-between; font-family:'Teko',sans-serif; font-size:16px; margin-bottom:4px; }
+.stat-row-name{ text-align:center; font-size:10px; color: var(--steel-dim); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
+.stat-bar-track{ display:flex; height:8px; border-radius:4px; overflow:hidden; background: var(--bg-elevated); }
+.stat-bar-a{ background: var(--turf); }
+.stat-bar-b{ background: var(--steel-dim); }
+
+.model-badge{
+  display:inline-flex; align-items:center; gap:5px; font-size:10px; color: var(--steel-dim);
+  background: var(--bg-elevated); border:1px solid var(--line); border-radius:20px; padding:5px 10px; margin: 10px 4px 0;
+}
+.model-badge::before{ content:'●'; color: var(--gold); font-size:8px; }
+
+/* Notification toggle switch (styled after iOS on/off switch) */
+.notify-toggle{
+  width:44px; height:26px; border-radius:14px; position:relative; flex-shrink:0;
+  background: var(--bg); border: 1px solid var(--line); transition: background 0.2s ease;
+  cursor:pointer;
+}
+.notify-toggle.on{ background: var(--turf); border-color: var(--turf); }
+.notify-toggle-knob{
+  width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4); transition: transform 0.2s cubic-bezier(.4,0,.2,1);
+}
+.notify-toggle.on .notify-toggle-knob{ transform: translateX(18px); }
+.nav-badge{
+  position:absolute; top:4px; right:calc(50% - 20px); width:9px; height:9px; border-radius:50%;
+  background: var(--danger); border: 2px solid var(--bg-elevated); box-shadow: 0 0 6px rgba(229,72,77,0.6);
+}
+.news-followed-tag{
+  display:inline-flex; align-items:center; gap:4px; font-size:9px; font-weight:700; color: var(--turf);
+  background: rgba(63,209,109,0.12); border:1px solid rgba(63,209,109,0.3); border-radius:20px; padding:2px 8px;
+}
+
+#view-predict{
+  background: radial-gradient(ellipse at 50% 0%, rgba(63,209,109,0.10), transparent 60%), var(--bg);
+  margin: 0 -16px; padding: 4px 16px 20px;
+}
+.live-card{
+  background: linear-gradient(160deg, #1a2e1f, #0e1712 70%);
+  border:2px solid rgba(63,209,109,0.3); border-radius:20px; padding:16px; margin: 4px 4px 18px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 0 30px rgba(63,209,109,0.08);
+}
+.live-tag{
+  display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:700; letter-spacing:0.08em;
+  color: var(--danger); margin-bottom:10px;
+}
+.live-tag::before{ content:''; width:7px; height:7px; border-radius:50%; background: var(--danger); animation: pulse 1.2s infinite; }
+.score-bug{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.score-team{ display:flex; align-items:center; gap:8px; }
+.score-crest{ width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:'Teko',sans-serif; font-size:14px; color:#fff; border:2px solid rgba(255,255,255,0.15); }
+.score-val{ font-family:'Teko',sans-serif; font-size:28px; }
+.score-mid{ text-align:center; font-family:'Teko',sans-serif; font-size:13px; color: var(--steel); }
+.possession-dot{ width:8px; height:8px; border-radius:50%; background: var(--gold); box-shadow: 0 0 6px var(--gold); margin-left:4px; display:inline-block; }
+.field-wrap{ background: #0d1f12; border-radius:12px; padding:10px 12px; border:1px solid rgba(63,209,109,0.2); }
+.field-strip{ position:relative; height:26px; background: repeating-linear-gradient(90deg, #163a20 0 9.09%, #123018 9.09% 18.18%); border-radius:4px; overflow:hidden; }
+.field-marker{ position:absolute; top:0; bottom:0; width:3px; background: var(--gold); box-shadow: 0 0 8px var(--gold); transition: left 0.6s ease; }
+.field-labels{ display:flex; justify-content:space-between; font-size:9px; color: var(--steel-dim); margin-top:4px; }
+.down-distance{ font-family:'Teko',sans-serif; font-size:17px; text-align:center; margin-top:10px; color: var(--turf); letter-spacing:0.03em; }
+.bottom-nav{
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:560px;
+  background: rgba(18,22,27,0.92); backdrop-filter: blur(16px);
+  border-top:1px solid var(--line);
+  display:flex; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  z-index:50;
+}
+.nav-btn{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 0;
+  color: var(--steel-dim); background:none; border:none;
+}
+.nav-btn.active{ color: var(--turf); }
+.nav-icon{ width:22px; height:22px; }
+.nav-label{ font-size:10px; font-weight:600; letter-spacing:0.02em; }
+
+/* Loading / empty states */
+.loader-wrap{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 80px 20px; gap:14px; }
+.spinner{ width:34px; height:34px; border-radius:50%; border:3px solid var(--line); border-top-color: var(--turf); animation: spin 0.8s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.loader-text{ font-size:12px; color: var(--steel-dim); }
+
+.back-btn{
+  display:flex; align-items:center; gap:6px; color: var(--steel); font-size:13px; font-weight:600;
+  padding: 6px 4px; margin-bottom: 6px; background:none; border:none;
+}
+
+.empty-state{ text-align:center; padding: 40px 20px; color: var(--steel-dim); font-size:13px; }
+
+.pill{ font-size:10px; padding:3px 9px; border-radius:20px; background: var(--bg-elevated); color: var(--steel); border:1px solid var(--line); }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <path d="M92 60 L128 60 L128 72 C128 88 118 98 110 98 C102 98 92 88 92 72 Z" fill="#D4AF37"/>
+          <path d="M92 64 C82 64 78 72 86 78 M128 64 C138 64 142 72 134 78" stroke="#D4AF37" stroke-width="3" fill="none"/>
+          <rect x="106" y="98" width="8" height="10" fill="#D4AF37"/>
+          <rect x="98" y="108" width="24" height="8" rx="2" fill="#D4AF37"/>
+        </svg>
+      </div>
+      <div class="brand-text">NFL <span>by Nico</span></div>
+    </div>
+    <div class="updated-label" id="updatedLabel">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="updatedText">loading…</span>
+    </div>
+  </div>
+
+  <!-- HOME / STANDINGS VIEW -->
+  <div class="view active" id="view-home">
+    <div id="myTeamsRow"></div>
+    <div class="conf-toggle">
+      <button class="conf-btn active afc" id="btnAFC" onclick="setConference('AFC')">AFC</button>
+      <button class="conf-btn nfc" id="btnNFC" onclick="setConference('NFC')">NFC</button>
+    </div>
+    <div id="divisionGrid" class="division-grid">
+      <div class="loader-wrap"><div class="spinner"></div><div class="loader-text">Pulling live standings…</div></div>
+    </div>
+  </div>
+
+  <!-- TEAM DETAIL VIEW -->
+  <div class="view" id="view-team">
+    <button class="back-btn" onclick="showView('home')">‹ Standings</button>
+    <div id="teamDetailContent"></div>
+  </div>
+
+  <!-- GAMES VIEW -->
+  <div class="view" id="view-predict">
+    <div id="liveGameTracker"></div>
+    <div class="section-label">Upcoming Games</div>
+    <div id="predictionsContent">
+      <div class="loader-wrap"><div class="spinner"></div><div class="loader-text">Running the model…</div></div>
+    </div>
+  </div>
+
+  <!-- GAME DETAIL VIEW -->
+  <div class="view" id="view-gamedetail">
+    <button class="back-btn" onclick="showView('predict')">‹ Games</button>
+    <div id="gameDetailContent"></div>
+  </div>
+
+  <!-- NEWS VIEW -->
+  <div class="view" id="view-news">
+    <div class="section-label">Breaking News</div>
+    <div id="newsContent">
+      <div class="loader-wrap"><div class="spinner"></div><div class="loader-text">Loading the wire…</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="showView('home')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+    <div class="nav-label">Standings</div>
+  </button>
+  <button class="nav-btn" id="nav-news" onclick="showView('news')" style="position:relative;">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>
+    <div class="nav-label">News</div>
+    <div id="newsBadge" class="nav-badge" style="display:none;"></div>
+  </button>
+  <button class="nav-btn" id="nav-predict" onclick="showView('predict')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+    <div class="nav-label">Games</div>
+  </button>
+</div>
+
+<script>
+// ============== STATE ==============
+let STANDINGS = [];
+let LAST_SEASON_STANDINGS = [];
+let SCHEDULE = [];
+let SCORES = { games: [] };
+let currentConf = 'AFC';
+let selectedTeam = null;
+const CACHE_KEY_STANDINGS = 'gridiron_standings_cache';
+const CACHE_KEY_SCORES = 'gridiron_scores_cache';
+
+const TEAM_COLORS = {
+  ARI:['#97233F','#000000'], ATL:['#A71930','#000000'], BAL:['#241773','#000000'], BUF:['#00338D','#C60C30'],
+  CAR:['#0085CA','#101820'], CHI:['#0B162A','#C83803'], CIN:['#FB4F14','#000000'], CLE:['#311D00','#FF3C00'],
+  DAL:['#041E42','#869397'], DEN:['#FB4F14','#002244'], DET:['#0076B6','#B0B7BC'], GB:['#203731','#FFB612'],
+  HOU:['#03202F','#A71930'], IND:['#002C5F','#A2AAAD'], JAC:['#101820','#D7A22A'], JAX:['#101820','#D7A22A'],
+  KC:['#E31837','#FFB81C'], LV:['#000000','#A5ACAF'], LAC:['#0080C6','#FFC20E'], LA:['#003594','#FFA300'],
+  MIA:['#008E97','#FC4C02'], MIN:['#4F2683','#FFC62F'], NE:['#002244','#C60C30'], NO:['#D3BC8D','#101820'],
+  NYG:['#0B2265','#A71930'], NYJ:['#125740','#000000'], PHI:['#004C54','#A5ACAF'], PIT:['#FFB612','#101820'],
+  SF:['#AA0000','#B3995D'], SEA:['#002244','#69BE28'], TB:['#D50A0A','#34302B'], TEN:['#0C2340','#4B92DB'],
+  WAS:['#5A1414','#FFB612']
+};
+function teamGrad(abbr){
+  const c = TEAM_COLORS[abbr] || ['#3FD16D','#1a7a3a'];
+  return c[0]; // solid team color, no gradient
+}
+
+// Home stadiums — stable across seasons, safe to hard-code
+const TEAM_STADIUMS = {
+  ARI:'State Farm Stadium, Glendale AZ', ATL:'Mercedes-Benz Stadium, Atlanta GA', BAL:'M&T Bank Stadium, Baltimore MD',
+  BUF:'Highmark Stadium, Orchard Park NY', CAR:'Bank of America Stadium, Charlotte NC', CHI:'Soldier Field, Chicago IL',
+  CIN:'Paycor Stadium, Cincinnati OH', CLE:'Huntington Bank Field, Cleveland OH', DAL:'AT&T Stadium, Arlington TX',
+  DEN:'Empower Field at Mile High, Denver CO', DET:'Ford Field, Detroit MI', GB:'Lambeau Field, Green Bay WI',
+  HOU:'NRG Stadium, Houston TX', IND:'Lucas Oil Stadium, Indianapolis IN', JAC:'EverBank Stadium, Jacksonville FL',
+  KC:'GEHA Field at Arrowhead Stadium, Kansas City MO', LV:'Allegiant Stadium, Las Vegas NV', LAC:'SoFi Stadium, Inglewood CA',
+  LA:'SoFi Stadium, Inglewood CA', MIA:'Hard Rock Stadium, Miami Gardens FL', MIN:'U.S. Bank Stadium, Minneapolis MN',
+  NE:'Gillette Stadium, Foxborough MA', NO:'Caesars Superdome, New Orleans LA', NYG:'MetLife Stadium, East Rutherford NJ',
+  NYJ:'MetLife Stadium, East Rutherford NJ', PHI:'Lincoln Financial Field, Philadelphia PA', PIT:'Acrisure Stadium, Pittsburgh PA',
+  SF:"Levi's Stadium, Santa Clara CA", SEA:'Lumen Field, Seattle WA', TB:'Raymond James Stadium, Tampa FL',
+  TEN:'Nissan Stadium, Nashville TN', WAS:'Northwest Stadium, Landover MD'
+};
+
+// Real upcoming schedule snapshot (2026 preseason). Refresh periodically by
+// asking Claude to regenerate this file with the latest schedule.
+const SNAPSHOT_SCHEDULE = [{"id": "f112fe5a-d757-453f-8819-718dcddd52d3", "status": "scheduled", "start_time": "2026-08-07T00:00:00+00:00", "home": "ARI", "away": "CAR", "title": "Hall of Fame Game", "win_probability": {"ARI": 47.8, "CAR": 52.2}, "local_start": "Thu Aug 6, 6:00 PM CST"}, {"id": "d75404c4-fb21-4239-85e8-9fa8ce5283f5", "status": "scheduled", "start_time": "2026-08-13T23:00:00+00:00", "home": "CIN", "away": "DET", "local_start": "Thu Aug 13, 5:00 PM CST"}, {"id": "cedce52c-a5d5-4f58-a5fd-e3ecfeadbecf", "status": "scheduled", "start_time": "2026-08-13T23:00:00+00:00", "home": "PIT", "away": "GB", "local_start": "Thu Aug 13, 5:00 PM CST"}, {"id": "6c9b817d-140c-4568-94b9-7f908b014686", "status": "scheduled", "start_time": "2026-08-13T23:30:00+00:00", "home": "NE", "away": "IND", "local_start": "Thu Aug 13, 5:30 PM CST"}, {"id": "4fb56678-33e0-4c8f-8a17-6447ddb49fa9", "status": "scheduled", "start_time": "2026-08-14T00:00:00+00:00", "home": "LV", "away": "ARI", "local_start": "Thu Aug 13, 6:00 PM CST"}, {"id": "45a00140-5e74-43d7-ba3a-e32d5b72a2df", "status": "scheduled", "start_time": "2026-08-14T00:00:00+00:00", "home": "HOU", "away": "LAC", "local_start": "Thu Aug 13, 6:00 PM CST"}, {"id": "e715356e-bd9e-43cf-81b2-c7fa5ef142e9", "status": "scheduled", "start_time": "2026-08-14T01:00:00+00:00", "home": "SF", "away": "TEN", "local_start": "Thu Aug 13, 7:00 PM CST"}, {"id": "e88e0b5f-c77d-4e13-9d2f-19c344dffe5d", "status": "scheduled", "start_time": "2026-08-14T23:00:00+00:00", "home": "WAS", "away": "MIA", "local_start": "Fri Aug 14, 5:00 PM CST"}, {"id": "5d7d2437-5a87-43e7-a565-2c6e84cf711a", "status": "scheduled", "start_time": "2026-08-14T23:00:00+00:00", "home": "NYJ", "away": "TB", "local_start": "Fri Aug 14, 5:00 PM CST"}, {"id": "3e09bcaa-8358-4434-94c1-633f441da52c", "status": "scheduled", "start_time": "2026-08-14T23:00:00+00:00", "home": "ATL", "away": "DEN", "local_start": "Fri Aug 14, 5:00 PM CST"}, {"id": "9136a890-ab17-4416-8569-3dadc3e0fec8", "status": "scheduled", "start_time": "2026-08-15T17:00:00+00:00", "home": "CHI", "away": "CLE", "local_start": "Sat Aug 15, 11:00 AM CST"}, {"id": "3508174d-f0d3-4998-afe4-f26b64530e40", "status": "scheduled", "start_time": "2026-08-15T17:00:00+00:00", "home": "NYG", "away": "MIN", "local_start": "Sat Aug 15, 11:00 AM CST"}, {"id": "d641fb5f-fa7f-427c-867a-d515eae15470", "status": "scheduled", "start_time": "2026-08-15T17:00:00+00:00", "home": "BUF", "away": "CAR", "local_start": "Sat Aug 15, 11:00 AM CST"}, {"id": "344ccd0d-4f4c-4621-9848-a8e51d898faa", "status": "scheduled", "start_time": "2026-08-15T20:00:00+00:00", "home": "NO", "away": "JAC", "local_start": "Sat Aug 15, 2:00 PM CST"}, {"id": "0ec886b5-a648-486c-b61c-0e2aefba086d", "status": "scheduled", "start_time": "2026-08-15T20:00:00+00:00", "home": "KC", "away": "LA", "local_start": "Sat Aug 15, 2:00 PM CST"}];
+// Franchise history — stable historical facts (through the 2025 season / Super Bowl LX)
+const TROPHIES = {
+  ARI:{sb:0, conf:2, div:6}, ATL:{sb:0, conf:1, div:6}, BAL:{sb:2, conf:2, div:12},
+  BUF:{sb:0, conf:4, div:12}, CAR:{sb:0, conf:2, div:5}, CHI:{sb:1, conf:1, div:19},
+  CIN:{sb:0, conf:3, div:11}, CLE:{sb:0, conf:0, div:6}, DAL:{sb:5, conf:8, div:24},
+  DEN:{sb:3, conf:8, div:16}, DET:{sb:0, conf:0, div:4}, GB:{sb:4, conf:5, div:21},
+  HOU:{sb:0, conf:0, div:5}, IND:{sb:2, conf:4, div:11}, JAC:{sb:0, conf:0, div:2},
+  KC:{sb:3, conf:5, div:14}, LV:{sb:3, conf:5, div:8}, LAC:{sb:0, conf:1, div:6},
+  LA:{sb:2, conf:6, div:9}, MIA:{sb:2, conf:5, div:13}, MIN:{sb:0, conf:4, div:20},
+  NE:{sb:6, conf:11, div:22}, NO:{sb:1, conf:1, div:8}, NYG:{sb:4, conf:6, div:8},
+  NYJ:{sb:1, conf:1, div:4}, PHI:{sb:2, conf:4, div:14}, PIT:{sb:6, conf:8, div:24},
+  SF:{sb:5, conf:7, div:20}, SEA:{sb:1, conf:2, div:8}, TB:{sb:2, conf:2, div:6},
+  TEN:{sb:0, conf:1, div:6}, WAS:{sb:3, conf:5, div:13}
+};
+// the user's team — deeper coverage than the 4-player snapshot other teams get.
+// Defense & Special Teams starters — broader best-effort snapshot (not individually
+// verified via search like the Rams/spot-checked teams above). Corrected for the
+// trades confirmed today: Micah Parsons (DAL→GB), Quinnen Williams & Kenny Clark (→DAL).
+const DEFENSE_ST = {
+  BUF:[{n:'Ed Oliver',p:'DT'},{n:'Greg Rousseau',p:'EDGE'},{n:'Matt Milano',p:'LB'},{n:'Christian Benford',p:'CB'},{n:'Damar Hamlin',p:'S'},{n:'Tyler Bass',p:'K'}],
+  MIA:[{n:'Zach Sieler',p:'DT'},{n:'Bradley Chubb',p:'EDGE'},{n:'Jordyn Brooks',p:'LB'},{n:'Jalen Ramsey',p:'CB'},{n:'Jevon Holland',p:'S'},{n:'Jason Sanders',p:'K'}],
+  NE:[{n:'Christian Barmore',p:'DT'},{n:'Milton Williams',p:'EDGE'},{n:'Robert Spillane',p:'LB'},{n:'Christian Gonzalez',p:'CB'},{n:'Kyle Dugger',p:'S'},{n:'Andy Borregales',p:'K'}],
+  NYJ:[{n:"T'Vondre Sweat",p:'DL',note:'🔄 Traded from Titans for Jermaine Johnson II, 2026'},{n:'David Bailey',p:'EDGE',note:'🆕 2026 Draft, No. 2 overall — premier starting edge rusher'},{n:'Quincy Williams',p:'LB'},{n:'Sauce Gardner',p:'CB'},{n:'Tony Adams',p:'S'},{n:'Nick Folk',p:'K'}],
+  BAL:[{n:'Nnamdi Madubuike',p:'DT',note:'🩹 On PUP list to start camp'},{n:'Kyle Van Noy',p:'EDGE'},{n:'Roquan Smith',p:'LB'},{n:'Marlon Humphrey',p:'CB'},{n:'Kyle Hamilton',p:'S'},{n:'Justin Tucker',p:'K'}],
+  CIN:[{n:'Trey Hendrickson',p:'EDGE'},{n:'Dexter Lawrence',p:'DT',note:'🔄 Traded from Giants for the No. 10 overall pick, Apr 2026'},{n:'Logan Wilson',p:'LB'},{n:'DJ Turner',p:'CB'},{n:'Geno Stone',p:'S'},{n:'Evan McPherson',p:'K'}],
+  CLE:[{n:'Mason Graham',p:'DT'},{n:'Alex Wright',p:'EDGE'},{n:'Jeremiah Owusu-Koramoah',p:'LB'},{n:'Denzel Ward',p:'CB'},{n:'Grant Delpit',p:'S'},{n:'Dustin Hopkins',p:'K'}],
+  PIT:[{n:'Cameron Heyward',p:'DT'},{n:'T.J. Watt',p:'EDGE'},{n:'Patrick Queen',p:'LB'},{n:'Joey Porter Jr.',p:'CB'},{n:'Minkah Fitzpatrick',p:'S'},{n:'Chris Boswell',p:'K'}],
+  HOU:[{n:'Will Anderson Jr.',p:'EDGE'},{n:'Danielle Hunter',p:'EDGE'},{n:'Azeez Al-Shaair',p:'LB'},{n:'Derek Stingley Jr.',p:'CB'},{n:'Jalen Pitre',p:'S'},{n:"Ka'imi Fairbairn",p:'K'}],
+  IND:[{n:'DeForest Buckner',p:'DT'},{n:'Kwity Paye',p:'EDGE'},{n:'Zaire Franklin',p:'LB'},{n:'Kenny Moore II',p:'CB'},{n:'Julian Blackmon',p:'S'},{n:'Spencer Shrader',p:'K'}],
+  JAC:[{n:'Josh Hines-Allen',p:'EDGE'},{n:'Travon Walker',p:'EDGE'},{n:'Foyesade Oluokun',p:'LB'},{n:'Tyson Campbell',p:'CB'},{n:'Andre Cisco',p:'S'},{n:'Cam Little',p:'K'}],
+  TEN:[{n:'Jeffery Simmons',p:'DT'},{n:'Jermaine Johnson II',p:'EDGE',note:'🔄 Traded from Jets in the T\'Vondre Sweat swap, 2026'},{n:'Cody Barton',p:'LB'},{n:'Roger McCreary',p:'CB'},{n:'Amani Hooker',p:'S'},{n:'Joey Slye',p:'K'}],
+  DEN:[{n:'Zach Allen',p:'DT'},{n:'Nik Bonitto',p:'EDGE'},{n:'Alex Singleton',p:'LB'},{n:'Pat Surtain II',p:'CB'},{n:'Brandon Jones',p:'S'},{n:'Wil Lutz',p:'K'}],
+  KC:[{n:'Chris Jones',p:'DT'},{n:'George Karlaftis',p:'EDGE'},{n:'Nick Bolton',p:'LB'},{n:'Mansoor Delane',p:'CB',note:'🆕 2026 Draft — projected starting boundary corner'},{n:'Bryan Cook',p:'S'},{n:'Harrison Butker',p:'K'}],
+  LAC:[{n:'Khalil Mack',p:'EDGE'},{n:'Tuli Tuipulotu',p:'EDGE'},{n:'Daiyan Henley',p:'LB'},{n:'Asante Samuel Jr.',p:'CB'},{n:'Derwin James',p:'S'},{n:'Cameron Dicker',p:'K'}],
+  LV:[{n:'Maxx Crosby',p:'EDGE'},{n:'Christian Wilkins',p:'DT'},{n:'Divine Deablo',p:'LB'},{n:'Jack Jones',p:'CB'},{n:"Tre'von Moehrig",p:'S'},{n:'Daniel Carlson',p:'K'}],
+  DAL:[{n:'Quinnen Williams',p:'DT',note:'🔄 Traded from Jets, 2026 — part of Parsons return'},{n:'Kenny Clark',p:'DT',note:'🔄 Traded from Packers in the Micah Parsons deal, Aug 2025'},{n:'Rashan Gary',p:'EDGE',note:'🔄 Traded from Packers, Jun 2026'},{n:'Dee Winters',p:'LB',note:'🔄 Traded from 49ers, 2026 draft'},{n:'Caleb Downs',p:'S',note:'🆕 2026 Draft, No. 11 overall — immediate starter'},{n:'DaRon Bland',p:'CB'}],
+  PHI:[{n:'Jalen Carter',p:'DT'},{n:'Mykel Williams',p:'EDGE',note:'🆕 2026 Draft — tracking for starter snaps'},{n:'Jonathan Greenard',p:'EDGE',note:'🔄 Traded from Vikings, Apr 2026'},{n:'Jihaad Campbell',p:'LB',note:'🆕 2026 Draft — entrenched starter in Fangio\'s scheme'},{n:'Darius Slay',p:'CB'},{n:'Jake Elliott',p:'K'}],
+  NYG:[{n:'Brian Burns',p:'EDGE',note:'🔄 New DL anchor after Dexter Lawrence traded to CIN'},{n:'Abdul Carter',p:'LB',note:'🆕 2026 Draft — starting outside linebacker'},{n:'Arvell Reese',p:'EDGE',note:'🆕 2026 Draft, No. 5 overall — splitting starter reps'},{n:'Bobby Okereke',p:'LB'},{n:'Deonte Banks',p:'CB'},{n:'Tyler Nubin',p:'S'}],
+  WAS:[{n:'Daron Payne',p:'DT'},{n:'Dorance Armstrong',p:'EDGE'},{n:'Sonny Styles',p:'LB',note:'🆕 2026 Draft, No. 7 overall — immediate starter'},{n:'Marshon Lattimore',p:'CB'},{n:'Quan Martin',p:'S'},{n:'Zane Gonzalez',p:'K'}],
+  CHI:[{n:'Montez Sweat',p:'EDGE'},{n:'Gervon Dexter',p:'DT'},{n:'T.J. Edwards',p:'LB'},{n:'Jaylon Johnson',p:'CB'},{n:'Kevin Byard',p:'S'},{n:'Cairo Santos',p:'K'}],
+  DET:[{n:'Aidan Hutchinson',p:'EDGE'},{n:'Alim McNeill',p:'DT'},{n:'Alex Anzalone',p:'LB'},{n:'Terrion Arnold',p:'CB'},{n:'Kerby Joseph',p:'S'},{n:'Jake Bates',p:'K'}],
+  GB:[{n:'Micah Parsons',p:'EDGE',inj:'Recovering from torn ACL (Dec 2025)',note:'🔄 Traded from Cowboys, Aug 2025 — signed record 4yr/$188M extension'},{n:'Devonte Wyatt',p:'DT'},{n:'Quay Walker',p:'LB'},{n:'Jaire Alexander',p:'CB'},{n:'Xavier McKinney',p:'S'},{n:'Brandon McManus',p:'K'}],
+  MIN:[{n:'Harrison Phillips',p:'DT',note:'🔄 New EDGE anchor after Greenard traded to PHI'},{n:'Blake Cashman',p:'LB'},{n:'Byron Murphy Jr.',p:'CB'},{n:'Harrison Smith',p:'S'},{n:'Will Reichard',p:'K'}],
+  ATL:[{n:'David Onyemata',p:'DT'},{n:'Kaden Elliss',p:'LB'},{n:'A.J. Terrell',p:'CB'},{n:'Avieon Terrell',p:'CB',note:'🆕 2026 Draft — starting corner reps, joins brother A.J.'},{n:'Jessie Bates III',p:'S'},{n:'Younghoe Koo',p:'K'}],
+  CAR:[{n:'Derrick Brown',p:'DT'},{n:'DJ Wonnum',p:'EDGE'},{n:'Shaq Thompson',p:'LB'},{n:'Jaycee Horn',p:'CB'},{n:'Xavier Woods',p:'S'}],
+  NO:[{n:'Cameron Jordan',p:'EDGE'},{n:'Bryan Bresee',p:'DT'},{n:'Demario Davis',p:'LB'},{n:'Alontae Taylor',p:'CB'},{n:'Tyrann Mathieu',p:'S'},{n:'Blake Grupe',p:'K'}],
+  TB:[{n:'Vita Vea',p:'DT'},{n:'YaYa Diaby',p:'EDGE'},{n:'Lavonte David',p:'LB'},{n:'Jamel Dean',p:'CB'},{n:'Antoine Winfield Jr.',p:'S'},{n:'Chase McLaughlin',p:'K'}],
+  ARI:[{n:'Zaven Collins',p:'LB'},{n:'Garrett Williams',p:'CB'},{n:'Budda Baker',p:'S'},{n:'Kyzir White',p:'LB'},{n:'Chad Ryland',p:'K'}],
+  SF:[{n:'Nick Bosa',p:'EDGE'},{n:'Fred Warner',p:'LB'},{n:'Charvarius Ward',p:'CB'},{n:'Talanoa Hufanga',p:'S'},{n:'Jake Moody',p:'K'}],
+  SEA:[{n:'Leonard Williams',p:'DT'},{n:'Boye Mafe',p:'EDGE'},{n:'Ernest Jones',p:'LB'},{n:'Riq Woolen',p:'CB'},{n:'Julian Love',p:'S'},{n:'Jason Myers',p:'K'}]
+};
+
+// Full roster for the Rams (verified via live search, July 2026) since this is
+// the user's team — deeper coverage than the snapshot other teams get.
+const RAMS_FULL_ROSTER = {
+  Offense: [
+    {n:'Matthew Stafford', p:'QB'}, {n:'Ty Simpson', p:'QB (backup)'}, {n:'Stetson Bennett', p:'QB (3rd string)'},
+    {n:'Kyren Williams', p:'RB'}, {n:'Blake Corum', p:'RB (backup)'}, {n:'Jarquez Hunter', p:'RB (3rd string)'},
+    {n:'Puka Nacua', p:'WR1'}, {n:'Davante Adams', p:'WR2'}, {n:'Jordan Whittington', p:'WR3'}, {n:'Xavier Smith', p:'WR (depth)'}, {n:'Konata Mumpfield', p:'WR (depth)'},
+    {n:'Colby Parkinson', p:'TE'}, {n:'Tyler Higbee', p:'TE (backup)'}, {n:'Terrance Ferguson', p:'TE (depth)'},
+    {n:'Alaric Jackson', p:'LT'}, {n:'Steve Avila', p:'LG'}, {n:'Coleman Shelton', p:'C'}, {n:'Kevin Dotson', p:'RG'}, {n:'Rob Havenstein', p:'RT'}
+  ],
+  Defense: [
+    {n:'Myles Garrett', p:'DE (traded from CLE, Jun 2026)'}, {n:'Kobie Turner', p:'DT'}, {n:'Poona Ford', p:'NT'},
+    {n:'Byron Young', p:'OLB'}, {n:'Nate Landman', p:'ILB'}, {n:'Omar Speights', p:'ILB'},
+    {n:'Trent McDuffie', p:'CB1 (traded from KC, Mar 2026)'}, {n:'Darious Williams', p:'CB2'}, {n:'Emmanuel Forbes Jr.', p:'CB (depth)'}, {n:'Kamren Kinchens', p:'FS'}, {n:'Kam Curl', p:'SS'}
+  ],
+  'Special Teams': [
+    {n:'Harrison Mevis', p:'K (took over from Karty, late 2025)'}, {n:'Ethan Evans', p:'P'}, {n:'Alex Ward', p:'LS'}
+  ]
+};
+
+// Best-effort snapshot from Claude's knowledge, not a live feed — offseason
+// moves/trades may not be reflected. Ask Claude in chat to verify/update any player.
+const ROSTERS = {
+  BUF:[{n:'Josh Allen',p:'QB',s:'2,800 Pass Yds',u:'28 TD'},{n:'James Cook',p:'RB',s:'1,000 Rush Yds',u:'9 TD'},{n:'D.J. Moore',p:'WR',s:'950 Rec Yds',u:'6 TD',note:'🔄 Traded from Bears, Jun 2026'},{n:'Khalil Shakir',p:'WR',s:'700 Rec Yds',u:'4 TD'}],
+  MIA:[{n:'Tua Tagovailoa',p:'QB',s:'3,100 Pass Yds',u:'19 TD'},{n:"De'Von Achane",p:'RB',s:'900 Rush Yds',u:'7 TD'},{n:'Tyreek Hill',p:'WR',s:'950 Rec Yds',u:'6 TD',note:'🔄 New WR1 after Waddle traded to DEN'},{n:'Malik Washington',p:'WR',s:'400 Rec Yds',u:'2 TD'}],
+  NE:[{n:'Drake Maye',p:'QB',s:'3,200 Pass Yds',u:'20 TD'},{n:'Rhamondre Stevenson',p:'RB',s:'750 Rush Yds',u:'5 TD'},{n:'A.J. Brown',p:'WR',s:'1,050 Rec Yds',u:'7 TD',note:'🔄 Traded from Eagles, Jun 2026'},{n:'Stefon Diggs',p:'WR',s:'950 Rec Yds',u:'7 TD'}],
+  NYJ:[{n:'Geno Smith',p:'QB',s:'3,200 Pass Yds',u:'19 TD',note:'🔄 Signed after Raiders departure, replaces Justin Fields'},{n:'Breece Hall',p:'RB',s:'950 Rush Yds',u:'6 TD'},{n:'Garrett Wilson',p:'WR',s:'1,050 Rec Yds',u:'6 TD'},{n:'Adonai Mitchell',p:'WR',s:'450 Rec Yds',u:'2 TD'}],
+  BAL:[{n:'Lamar Jackson',p:'QB',s:'3,600 Pass Yds',u:'34 TD'},{n:'Derrick Henry',p:'RB',s:'1,600 Rush Yds',u:'15 TD'},{n:'Zay Flowers',p:'WR',s:'1,000 Rec Yds',u:'6 TD'},{n:'Mark Andrews',p:'TE',s:'650 Rec Yds',u:'6 TD'}],
+  CIN:[{n:'Joe Burrow',p:'QB',s:'4,300 Pass Yds',u:'35 TD'},{n:"Ja'Marr Chase",p:'WR',s:'1,700 Rec Yds',u:'13 TD'},{n:'Tee Higgins',p:'WR',s:'900 Rec Yds',u:'8 TD'},{n:'Chase Brown',p:'RB',s:'1,100 Rush Yds',u:'8 TD'}],
+  CLE:[{n:'Dillon Gabriel',p:'QB',s:'2,200 Pass Yds',u:'12 TD'},{n:'Jerome Ford',p:'RB',s:'700 Rush Yds',u:'4 TD'},{n:'Jerry Jeudy',p:'WR',s:'850 Rec Yds',u:'4 TD'},{n:'David Njoku',p:'TE',s:'600 Rec Yds',u:'4 TD'}],
+  PIT:[{n:'Aaron Rodgers',p:'QB',s:'3,300 Pass Yds',u:'24 TD',note:'🏁 Announced 2026 will be his final NFL season'},{n:'Jaylen Warren',p:'RB',s:'850 Rush Yds',u:'5 TD'},{n:'DK Metcalf',p:'WR',s:'950 Rec Yds',u:'7 TD'},{n:'Michael Pittman Jr.',p:'WR',s:'784 Rec Yds',u:'7 TD',note:'🔄 Traded from Colts, Mar 2026'}],
+  HOU:[{n:'C.J. Stroud',p:'QB',s:'3,300 Pass Yds',u:'21 TD'},{n:'Joe Mixon',p:'RB',s:'1,000 Rush Yds',u:'9 TD'},{n:'Nico Collins',p:'WR',s:'1,150 Rec Yds',u:'8 TD'},{n:'Tank Dell',p:'WR',s:'600 Rec Yds',u:'4 TD'}],
+  IND:[{n:'Daniel Jones',p:'QB',s:'3,400 Pass Yds',u:'19 TD',note:'🔄 Signed 2025 — won job over Anthony Richardson'},{n:'Jonathan Taylor',p:'RB',s:'1,550 Rush Yds',u:'13 TD'},{n:'Alec Pierce',p:'WR',s:'750 Rec Yds',u:'5 TD',note:'🔄 Moves to WR1 after Pittman traded to PIT'},{n:'Josh Downs',p:'WR',s:'700 Rec Yds',u:'4 TD'}],
+  JAC:[{n:'Trevor Lawrence',p:'QB',s:'3,400 Pass Yds',u:'22 TD'},{n:'Travis Etienne Jr.',p:'RB',s:'950 Rush Yds',u:'7 TD'},{n:'Brian Thomas Jr.',p:'WR',s:'1,250 Rec Yds',u:'10 TD'},{n:'Christian Kirk',p:'WR',s:'650 Rec Yds',u:'3 TD'}],
+  TEN:[{n:'Cam Ward',p:'QB',s:'2,700 Pass Yds',u:'15 TD'},{n:'Tony Pollard',p:'RB',s:'950 Rush Yds',u:'6 TD'},{n:'Carnell Tate',p:'WR',s:'—',u:'Rookie, No. 4 overall',note:'🆕 2026 Draft — locked in as Day 1 starter'},{n:'Calvin Ridley',p:'WR',s:'900 Rec Yds',u:'5 TD'}],
+  DEN:[{n:'Bo Nix',p:'QB',s:'3,700 Pass Yds',u:'27 TD'},{n:'J.K. Dobbins',p:'RB',s:'900 Rush Yds',u:'7 TD'},{n:'Jaylen Waddle',p:'WR',s:'900 Rec Yds',u:'5 TD',note:'🔄 Traded from Dolphins, Mar 2026'},{n:'Courtland Sutton',p:'WR',s:'1,000 Rec Yds',u:'7 TD'}],
+  KC:[{n:'Patrick Mahomes',p:'QB',s:'3,900 Pass Yds',u:'28 TD',inj:'Recovering from torn ACL/LCL (Dec 2025) — cleared for camp, targeting Week 1'},{n:'Isiah Pacheco',p:'RB',s:'900 Rush Yds',u:'6 TD'},{n:'Rashee Rice',p:'WR',s:'950 Rec Yds',u:'7 TD'},{n:'Travis Kelce',p:'TE',s:'800 Rec Yds',u:'6 TD'}],
+  LAC:[{n:'Justin Herbert',p:'QB',s:'3,500 Pass Yds',u:'24 TD'},{n:'Omarion Hampton',p:'RB',s:'1,000 Rush Yds',u:'8 TD'},{n:'Ladd McConkey',p:'WR',s:'1,100 Rec Yds',u:'7 TD'},{n:'Quentin Johnston',p:'WR',s:'650 Rec Yds',u:'4 TD'}],
+  LV:[{n:'Kirk Cousins',p:'QB',s:'3,000 Pass Yds',u:'20 TD',note:'🔄 Signed 2026 — beat out rookie Fernando Mendoza for the job'},{n:'Ashton Jeanty',p:'RB',s:'1,100 Rush Yds',u:'8 TD'},{n:'Jakobi Meyers',p:'WR',s:'850 Rec Yds',u:'5 TD'},{n:'Brock Bowers',p:'TE',s:'1,050 Rec Yds',u:'6 TD'}],
+  DAL:[{n:'Dak Prescott',p:'QB',s:'3,600 Pass Yds',u:'25 TD'},{n:'Javonte Williams',p:'RB',s:'800 Rush Yds',u:'6 TD'},{n:'CeeDee Lamb',p:'WR',s:'1,300 Rec Yds',u:'8 TD'},{n:'George Pickens',p:'WR',s:'950 Rec Yds',u:'7 TD'}],
+  PHI:[{n:'Jalen Hurts',p:'QB',s:'3,200 Pass Yds',u:'23 TD'},{n:'Saquon Barkley',p:'RB',s:'1,900 Rush Yds',u:'14 TD'},{n:'DeVonta Smith',p:'WR',s:'950 Rec Yds',u:'6 TD',note:'🔄 Moves to WR1 after A.J. Brown traded to NE'},{n:'Jahan Dotson',p:'WR',s:'450 Rec Yds',u:'3 TD'}],
+  NYG:[{n:'Jaxson Dart',p:'QB',s:'2,300 Pass Yds',u:'13 TD'},{n:'Tyrone Tracy Jr.',p:'RB',s:'800 Rush Yds',u:'5 TD'},{n:'Malik Nabers',p:'WR',s:'1,200 Rec Yds',u:'7 TD'},{n:'Wan\'Dale Robinson',p:'WR',s:'700 Rec Yds',u:'3 TD'}],
+  WAS:[{n:'Jayden Daniels',p:'QB',s:'3,500 Pass Yds',u:'24 TD'},{n:'Brian Robinson Jr.',p:'RB',s:'850 Rush Yds',u:'7 TD'},{n:'Terry McLaurin',p:'WR',s:'1,050 Rec Yds',u:'8 TD'},{n:'Deebo Samuel',p:'WR',s:'750 Rec Yds',u:'5 TD'}],
+  CHI:[{n:'Caleb Williams',p:'QB',s:'3,300 Pass Yds',u:'22 TD'},{n:"D'Andre Swift",p:'RB',s:'900 Rush Yds',u:'6 TD'},{n:'Rome Odunze',p:'WR',s:'850 Rec Yds',u:'5 TD',note:'🔄 New WR1 after D.J. Moore traded to BUF'},{n:'Cole Kmet',p:'TE',s:'500 Rec Yds',u:'4 TD'}],
+  DET:[{n:'Jared Goff',p:'QB',s:'4,000 Pass Yds',u:'30 TD'},{n:'Jahmyr Gibbs',p:'RB',s:'1,400 Rush Yds',u:'14 TD'},{n:'Amon-Ra St. Brown',p:'WR',s:'1,250 Rec Yds',u:'9 TD'},{n:'Sam LaPorta',p:'TE',s:'750 Rec Yds',u:'6 TD'}],
+  GB:[{n:'Jordan Love',p:'QB',s:'3,400 Pass Yds',u:'23 TD'},{n:'Josh Jacobs',p:'RB',s:'1,300 Rush Yds',u:'11 TD'},{n:'Jayden Reed',p:'WR',s:'900 Rec Yds',u:'6 TD'},{n:'Tucker Kraft',p:'TE',s:'650 Rec Yds',u:'5 TD'}],
+  MIN:[{n:'J.J. McCarthy',p:'QB',s:'2,900 Pass Yds',u:'18 TD'},{n:'Aaron Jones',p:'RB',s:'900 Rush Yds',u:'6 TD'},{n:'Justin Jefferson',p:'WR',s:'1,500 Rec Yds',u:'10 TD'},{n:'Jordan Addison',p:'WR',s:'800 Rec Yds',u:'6 TD'}],
+  ATL:[{n:'Michael Penix Jr.',p:'QB',s:'3,300 Pass Yds',u:'22 TD'},{n:'Bijan Robinson',p:'RB',s:'1,450 Rush Yds',u:'12 TD'},{n:'Drake London',p:'WR',s:'1,150 Rec Yds',u:'7 TD'},{n:'Darnell Mooney',p:'WR',s:'700 Rec Yds',u:'4 TD'}],
+  CAR:[{n:'Bryce Young',p:'QB',s:'2,900 Pass Yds',u:'18 TD'},{n:'Chuba Hubbard',p:'RB',s:'1,050 Rush Yds',u:'9 TD'},{n:'Xavier Legette',p:'WR',s:'750 Rec Yds',u:'4 TD'},{n:'Tetairoa McMillan',p:'WR',s:'800 Rec Yds',u:'5 TD'}],
+  NO:[{n:'Tyler Shough',p:'QB',s:'2,300 Pass Yds',u:'13 TD'},{n:'Alvin Kamara',p:'RB',s:'950 Rush Yds',u:'7 TD'},{n:'Chris Olave',p:'WR',s:'950 Rec Yds',u:'5 TD'},{n:'Jordyn Tyson',p:'WR',s:'—',u:'Rookie, No. 8 overall',note:'🆕 2026 Draft — immediate starter opposite Olave'}],
+  TB:[{n:'Baker Mayfield',p:'QB',s:'4,000 Pass Yds',u:'28 TD'},{n:'Bucky Irving',p:'RB',s:'1,150 Rush Yds',u:'8 TD'},{n:'Mike Evans',p:'WR',s:'1,000 Rec Yds',u:'9 TD'},{n:'Chris Godwin',p:'WR',s:'850 Rec Yds',u:'5 TD'}],
+  ARI:[{n:'Kyler Murray',p:'QB',s:'3,300 Pass Yds',u:'20 TD'},{n:'Jeremiyah Love',p:'RB',s:'—',u:'Rookie, No. 3 overall',note:'🆕 2026 Draft — plug-and-play starter, ahead of James Conner'},{n:'Marvin Harrison Jr.',p:'WR',s:'1,050 Rec Yds',u:'7 TD'},{n:'Trey McBride',p:'TE',s:'1,100 Rec Yds',u:'6 TD'}],
+  LA:[{n:'Matthew Stafford',p:'QB',s:'3,700 Pass Yds',u:'25 TD'},{n:'Kyren Williams',p:'RB',s:'1,150 Rush Yds',u:'10 TD'},{n:'Puka Nacua',p:'WR',s:'1,300 Rec Yds',u:'8 TD'},{n:'Davante Adams',p:'WR',s:'1,000 Rec Yds',u:'8 TD'}],
+  SF:[{n:'Brock Purdy',p:'QB',s:'3,600 Pass Yds',u:'24 TD'},{n:'Christian McCaffrey',p:'RB',s:'1,300 Rush Yds',u:'11 TD'},{n:'Ricky Pearsall',p:'WR',s:'850 Rec Yds',u:'5 TD'},{n:'George Kittle',p:'TE',s:'950 Rec Yds',u:'7 TD',inj:'Recovering from torn Achilles (Jan 2026) — targeting Week 1'}],
+  SEA:[{n:'Sam Darnold',p:'QB',s:'3,600 Pass Yds',u:'24 TD'},{n:'Kenneth Walker III',p:'RB',s:'1,000 Rush Yds',u:'8 TD'},{n:'Jadarian Price',p:'RB',s:'—',u:'Rookie, No. 32 overall',note:'🆕 2026 Draft — primed for a heavy share of the ground game'},{n:'Jaxon Smith-Njigba',p:'WR',s:'1,400 Rec Yds',u:'9 TD'}]
+};
+
+// ============== VIEW ROUTING ==============
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nav-'+name)?.classList.add('active');
+  window.scrollTo(0,0);
+  if(name==='predict' && !predictionsRendered) renderPredictions();
+  if(name==='predict') renderLiveGameTracker();
+  if(name==='news') renderNews();
+}
+
+function setConference(conf){
+  currentConf = conf;
+  document.getElementById('btnAFC').classList.toggle('active', conf==='AFC');
+  document.getElementById('btnNFC').classList.toggle('active', conf==='NFC');
+  renderStandings();
+}
+
+// ============== DATA LOADING ==============
+// Baked-in snapshot (last pulled by Claude) — used the first time the app opens
+// or whenever there's no newer cached data. Update this block any time you ask
+// Claude to refresh the app with the latest standings.
+const SNAPSHOT_STANDINGS = [{"rank": {"conference": 15, "division": 4, "clinched": "eliminated"}, "team": {"name": "New York Giants", "abbreviation": "NYG"}, "wins": 4, "losses": 13, "win_percentage": 0.235, "conference": "NFC", "division": "NFC East"}, {"rank": {"conference": 14, "division": 3, "clinched": "eliminated"}, "team": {"name": "Washington Commanders", "abbreviation": "WAS"}, "wins": 5, "losses": 12, "win_percentage": 0.294, "conference": "NFC", "division": "NFC East"}, {"rank": {"conference": 3, "division": 1, "clinched": "division"}, "team": {"name": "Philadelphia Eagles", "abbreviation": "PHI"}, "wins": 11, "losses": 6, "win_percentage": 0.647, "conference": "NFC", "division": "NFC East"}, {"rank": {"conference": 12, "division": 2, "clinched": "eliminated"}, "team": {"name": "Dallas Cowboys", "abbreviation": "DAL"}, "wins": 7, "losses": 9, "win_percentage": 0.441, "conference": "NFC", "division": "NFC East"}, {"rank": {"conference": 13, "division": 4, "clinched": "eliminated"}, "team": {"name": "New Orleans Saints", "abbreviation": "NO"}, "wins": 6, "losses": 11, "win_percentage": 0.353, "conference": "NFC", "division": "NFC South"}, {"rank": {"conference": 10, "division": 2, "clinched": "eliminated"}, "team": {"name": "Tampa Bay Buccaneers", "abbreviation": "TB"}, "wins": 8, "losses": 9, "win_percentage": 0.471, "conference": "NFC", "division": "NFC South"}, {"rank": {"conference": 11, "division": 3, "clinched": "eliminated"}, "team": {"name": "Atlanta Falcons", "abbreviation": "ATL"}, "wins": 8, "losses": 9, "win_percentage": 0.471, "conference": "NFC", "division": "NFC South"}, {"rank": {"conference": 4, "division": 1, "clinched": "division"}, "team": {"name": "Carolina Panthers", "abbreviation": "CAR"}, "wins": 8, "losses": 9, "win_percentage": 0.471, "conference": "NFC", "division": "NFC South"}, {"rank": {"conference": 5, "division": 2, "clinched": "wildcard"}, "team": {"name": "Los Angeles Rams", "abbreviation": "LA"}, "wins": 12, "losses": 5, "win_percentage": 0.706, "conference": "NFC", "division": "NFC West"}, {"rank": {"conference": 1, "division": 1, "clinched": "conference"}, "team": {"name": "Seattle Seahawks", "abbreviation": "SEA"}, "wins": 14, "losses": 3, "win_percentage": 0.824, "conference": "NFC", "division": "NFC West"}, {"rank": {"conference": 16, "division": 4, "clinched": "eliminated"}, "team": {"name": "Arizona Cardinals", "abbreviation": "ARI"}, "wins": 3, "losses": 14, "win_percentage": 0.176, "conference": "NFC", "division": "NFC West"}, {"rank": {"conference": 6, "division": 3, "clinched": "wildcard"}, "team": {"name": "San Francisco 49ers", "abbreviation": "SF"}, "wins": 12, "losses": 5, "win_percentage": 0.706, "conference": "NFC", "division": "NFC West"}, {"rank": {"conference": 8, "division": 3, "clinched": "eliminated"}, "team": {"name": "Minnesota Vikings", "abbreviation": "MIN"}, "wins": 9, "losses": 8, "win_percentage": 0.529, "conference": "NFC", "division": "NFC North"}, {"rank": {"conference": 2, "division": 1, "clinched": "division"}, "team": {"name": "Chicago Bears", "abbreviation": "CHI"}, "wins": 11, "losses": 6, "win_percentage": 0.647, "conference": "NFC", "division": "NFC North"}, {"rank": {"conference": 7, "division": 2, "clinched": "wildcard"}, "team": {"name": "Green Bay Packers", "abbreviation": "GB"}, "wins": 9, "losses": 7, "win_percentage": 0.559, "conference": "NFC", "division": "NFC North"}, {"rank": {"conference": 9, "division": 4, "clinched": "eliminated"}, "team": {"name": "Detroit Lions", "abbreviation": "DET"}, "wins": 9, "losses": 8, "win_percentage": 0.529, "conference": "NFC", "division": "NFC North"}, {"rank": {"conference": 7, "division": 2, "clinched": "wildcard"}, "team": {"name": "Los Angeles Chargers", "abbreviation": "LAC"}, "wins": 11, "losses": 6, "win_percentage": 0.647, "conference": "AFC", "division": "AFC West"}, {"rank": {"conference": 12, "division": 3, "clinched": "eliminated"}, "team": {"name": "Kansas City Chiefs", "abbreviation": "KC"}, "wins": 6, "losses": 11, "win_percentage": 0.353, "conference": "AFC", "division": "AFC West"}, {"rank": {"conference": 14, "division": 4, "clinched": "eliminated"}, "team": {"name": "Las Vegas Raiders", "abbreviation": "LV"}, "wins": 3, "losses": 14, "win_percentage": 0.176, "conference": "AFC", "division": "AFC West"}, {"rank": {"conference": 1, "division": 1, "clinched": "conference"}, "team": {"name": "Denver Broncos", "abbreviation": "DEN"}, "wins": 14, "losses": 3, "win_percentage": 0.824, "conference": "AFC", "division": "AFC West"}, {"rank": {"conference": 10, "division": 3, "clinched": "eliminated"}, "team": {"name": "Miami Dolphins", "abbreviation": "MIA"}, "wins": 7, "losses": 10, "win_percentage": 0.412, "conference": "AFC", "division": "AFC East"}, {"rank": {"conference": 15, "division": 4, "clinched": "eliminated"}, "team": {"name": "New York Jets", "abbreviation": "NYJ"}, "wins": 3, "losses": 14, "win_percentage": 0.176, "conference": "AFC", "division": "AFC East"}, {"rank": {"conference": 6, "division": 2, "clinched": "wildcard"}, "team": {"name": "Buffalo Bills", "abbreviation": "BUF"}, "wins": 12, "losses": 5, "win_percentage": 0.706, "conference": "AFC", "division": "AFC East"}, {"rank": {"conference": 2, "division": 1, "clinched": "division"}, "team": {"name": "New England Patriots", "abbreviation": "NE"}, "wins": 14, "losses": 3, "win_percentage": 0.824, "conference": "AFC", "division": "AFC East"}, {"rank": {"conference": 8, "division": 3, "clinched": "eliminated"}, "team": {"name": "Indianapolis Colts", "abbreviation": "IND"}, "wins": 8, "losses": 9, "win_percentage": 0.471, "conference": "AFC", "division": "AFC South"}, {"rank": {"conference": 5, "division": 2, "clinched": "wildcard"}, "team": {"name": "Houston Texans", "abbreviation": "HOU"}, "wins": 12, "losses": 5, "win_percentage": 0.706, "conference": "AFC", "division": "AFC South"}, {"rank": {"conference": 16, "division": 4, "clinched": "eliminated"}, "team": {"name": "Tennessee Titans", "abbreviation": "TEN"}, "wins": 3, "losses": 14, "win_percentage": 0.176, "conference": "AFC", "division": "AFC South"}, {"rank": {"conference": 3, "division": 1, "clinched": "division"}, "team": {"name": "Jacksonville Jaguars", "abbreviation": "JAC"}, "wins": 13, "losses": 4, "win_percentage": 0.765, "conference": "AFC", "division": "AFC South"}, {"rank": {"conference": 11, "division": 3, "clinched": "eliminated"}, "team": {"name": "Cincinnati Bengals", "abbreviation": "CIN"}, "wins": 6, "losses": 11, "win_percentage": 0.353, "conference": "AFC", "division": "AFC North"}, {"rank": {"conference": 4, "division": 1, "clinched": "division"}, "team": {"name": "Pittsburgh Steelers", "abbreviation": "PIT"}, "wins": 10, "losses": 7, "win_percentage": 0.588, "conference": "AFC", "division": "AFC North"}, {"rank": {"conference": 13, "division": 4, "clinched": "eliminated"}, "team": {"name": "Cleveland Browns", "abbreviation": "CLE"}, "wins": 5, "losses": 12, "win_percentage": 0.294, "conference": "AFC", "division": "AFC North"}, {"rank": {"conference": 9, "division": 2, "clinched": "eliminated"}, "team": {"name": "Baltimore Ravens", "abbreviation": "BAL"}, "wins": 8, "losses": 9, "win_percentage": 0.471, "conference": "AFC", "division": "AFC North"}];
+const SNAPSHOT_TIMESTAMP = "2026-07-26T00:00:00Z";
+
+const LIVE_STANDINGS_URL = 'https://nfl-live-data.vercel.app/api/standings';
+const LIVE_SCORES_URL = 'https://nfl-live-data.vercel.app/api/scores';
+
+// ESPN sometimes uses a different abbreviation than the rest of this app was
+// built with (e.g. JAX vs JAC, WSH vs WAS, LAR vs LA). Normalize any live
+// data through this map immediately so every roster/trophy/notes lookup
+// downstream always matches, no matter which convention ESPN returns.
+const ABBR_NORMALIZE = { JAX:'JAC', WSH:'WAS', LAR:'LA' };
+function normalizeAbbr(abbr){ return ABBR_NORMALIZE[abbr] || abbr; }
+
+async function loadSchedule(){
+  try{
+    const res = await fetch(LIVE_SCORES_URL, { cache: 'no-store' });
+    if(res.ok){
+      const live = await res.json();
+      if(Array.isArray(live) && live.length > 0){
+        SCHEDULE = live.map(g => ({
+          ...g,
+          home: normalizeAbbr(g.home),
+          away: normalizeAbbr(g.away),
+          possession: g.possession ? normalizeAbbr(g.possession) : g.possession
+        }));
+        try{ localStorage.setItem('cached_schedule', JSON.stringify(SCHEDULE)); }catch(e){}
+        refreshGamesViewIfOpen();
+        return;
+      }
+    }
+  }catch(e){}
+
+  try{
+    const cached = localStorage.getItem('cached_schedule');
+    if(cached){ SCHEDULE = JSON.parse(cached); refreshGamesViewIfOpen(); return; }
+  }catch(e){}
+
+  SCHEDULE = SNAPSHOT_SCHEDULE; // last resort — frozen fallback
+  refreshGamesViewIfOpen();
+}
+
+function refreshGamesViewIfOpen(){
+  // Re-render the Games tab with fresh data, whether or not it was already open —
+  // this catches the case where the tab loaded before the live fetch finished.
+  renderLiveGameTracker();
+  predictionsRendered = false;
+  if(document.getElementById('view-predict').classList.contains('active')) renderPredictions();
+}
+
+async function loadData(){
+  LAST_SEASON_STANDINGS = SNAPSHOT_STANDINGS; // always available for the model
+
+  // 1. Try the live backend first — real data, fetched fresh every time the app opens.
+  try{
+    const res = await fetch(LIVE_STANDINGS_URL, { cache: 'no-store' });
+    if(res.ok){
+      const live = await res.json();
+      if(Array.isArray(live) && live.length > 0){
+        STANDINGS = live.map(t => ({
+          ...t,
+          team: { ...t.team, abbreviation: normalizeAbbr(t.team.abbreviation) }
+        }));
+        renderStandings();
+        setUpdated(false, new Date().toISOString());
+        try{
+          localStorage.setItem(CACHE_KEY_STANDINGS, JSON.stringify(STANDINGS));
+          localStorage.setItem(CACHE_KEY_STANDINGS+'_time', new Date().toISOString());
+        }catch(e){}
+        return; // success — done, no need to fall back
+      }
+    }
+  }catch(e){
+    // offline, or the live backend is down — fall through to cache/snapshot below
+  }
+
+  // 2. No live data available — use whatever was cached from the last successful load.
+  try{
+    const cachedS = localStorage.getItem(CACHE_KEY_STANDINGS);
+    const cachedTime = localStorage.getItem(CACHE_KEY_STANDINGS+'_time');
+    if(cachedS){
+      STANDINGS = JSON.parse(cachedS);
+      renderStandings();
+      setUpdated(true, cachedTime);
+      return;
+    }
+  }catch(e){}
+
+  // 3. Nothing cached either (first-ever open, offline) — fall back to the frozen snapshot.
+  STANDINGS = SNAPSHOT_STANDINGS.map(t => ({
+    ...t,
+    wins: 0, losses: 0, ties: 0, win_percentage: 0,
+    rank: { ...t.rank, clinched: null }
+  }));
+  renderStandings();
+  setUpdated(true, SNAPSHOT_TIMESTAMP);
+}
+
+function setUpdated(fromCache, timestamp){
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('updatedText');
+  if(!fromCache){
+    dot.classList.add('live');
+    txt.textContent = 'Live · updated ' + new Date(timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    return;
+  }
+  dot.classList.remove('live');
+  if(timestamp){
+    try{
+      const d = new Date(timestamp);
+      txt.textContent = 'Cached · ' + d.toLocaleDateString([], {month:'short', day:'numeric'});
+    }catch(e){
+      txt.textContent = 'Cached data';
+    }
+  } else {
+    txt.textContent = 'Cached data';
+  }
+}
+
+// ============== RENDER: STANDINGS ==============
+function renderMyTeamsRow(){
+  const container = document.getElementById('myTeamsRow');
+  if(!container) return;
+  const followed = getFollowedTeams();
+  if(followed.length === 0 || !STANDINGS.length){
+    container.innerHTML = '';
+    return;
+  }
+  const teams = followed
+    .map(abbr => STANDINGS.find(t => t.team.abbreviation === abbr))
+    .filter(Boolean);
+  if(teams.length === 0){ container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div class="section-label" style="margin-top:14px;">⭐ My Teams</div>
+    <div class="my-teams-row">
+      ${teams.map(t => `
+        <div class="my-team-card" onclick="openTeam('${t.team.abbreviation}')">
+          <div class="my-team-crest" style="background:${teamGrad(t.team.abbreviation)}">${t.team.abbreviation}</div>
+          <div class="my-team-name">${t.team.name}</div>
+          <div class="my-team-record">${t.wins}-${t.losses}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderStandings(){
+  renderMyTeamsRow();
+  const grid = document.getElementById('divisionGrid');
+  if(!STANDINGS.length){
+    grid.innerHTML = '<div class="empty-state">No standings data yet. Pull to refresh once online.</div>';
+    return;
+  }
+  const confTeams = STANDINGS.filter(t => t.conference === currentConf);
+  const divisions = {};
+  confTeams.forEach(t=>{
+    if(!divisions[t.division]) divisions[t.division] = [];
+    divisions[t.division].push(t);
+  });
+  const order = ['East','North','South','West'];
+  const divNames = Object.keys(divisions).sort((a,b)=>{
+    const ai = order.findIndex(o=>a.includes(o));
+    const bi = order.findIndex(o=>b.includes(o));
+    return ai-bi;
+  });
+
+  const isPreseason = STANDINGS.every(t => (t.wins+t.losses+(t.ties||0)) === 0);
+  grid.innerHTML = divNames.map(divName=>{
+    // Order by last season's division finish as a neutral baseline during preseason
+    const teams = divisions[divName].sort((a,b)=> (a.rank?.division||99) - (b.rank?.division||99));
+    const reigningChamp = teams[0];
+    return `
+      <div class="division-tile">
+        <div class="division-head">
+          <div class="division-name">${divName}</div>
+          <div class="division-lead-tag">${isPreseason ? reigningChamp.team.abbreviation+' reigning champ' : reigningChamp.team.abbreviation+' leads'}</div>
+        </div>
+        ${teams.map(t=>{
+          const clinch = t.rank?.clinched || '';
+          const badgeClass = clinch === 'division' ? 'clinch-division' : clinch === 'conference' ? 'clinch-1' : clinch === 'wildcard' ? 'clinch-wildcard' : clinch === 'eliminated' ? 'clinch-eliminated' : '';
+          const badgeText = clinch === 'division' ? 'Z' : clinch === 'conference' ? '#1' : clinch === 'wildcard' ? 'WC' : clinch === 'eliminated' ? '—' : (t.rank?.division ?? '');
+          return `
+          <div class="team-row" onclick="openTeam('${t.team.abbreviation}')">
+            <div class="team-left">
+              <div class="team-crest" style="background:${teamGrad(t.team.abbreviation)}">${t.team.abbreviation}</div>
+              <div>
+                <div class="team-name">${t.team.name}</div>
+                <div class="team-sub">${isPreseason ? 'Preseason' : (t.win_percentage*100).toFixed(1)+'% win rate'}</div>
+              </div>
+            </div>
+            <div class="team-right">
+              <div>
+                <div class="team-record">${t.wins}-${t.losses}${t.ties?('-'+t.ties):''}</div>
+              </div>
+              ${isPreseason ? notifyToggle(t.team.abbreviation) : `<div class="rank-badge ${badgeClass}">${badgeText}</div>`}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+// ============== TEAM DETAIL ==============
+const TEAM_NOTES_BASE_URL = 'https://nfl-live-data.vercel.app/api/team-notes';
+
+async function loadTeamLiveNotes(abbr){
+  const container = document.getElementById('teamLiveNotes');
+  if(!container) return;
+  try{
+    const res = await fetch(`${TEAM_NOTES_BASE_URL}?team=${abbr}`, { cache: 'no-store' });
+    const notes = await res.json();
+    if(!Array.isArray(notes) || notes.length === 0){
+      container.innerHTML = '<div class="empty-state">No live notes available right now.</div>';
+      return;
+    }
+    container.innerHTML = notes.map(n => `
+      <div class="player-card" style="${n.status && n.status.toLowerCase() !== 'active' ? 'border-color: rgba(229,72,77,0.35);' : ''}">
+        <div class="player-left">
+          <div class="player-num">${n.status && n.status.toLowerCase() !== 'active' ? '🩹' : '📝'}</div>
+          <div>
+            <div class="player-name">${n.name} <span class="pill" style="font-size:9px;">${n.status||''}</span></div>
+            <div class="player-pos" style="line-height:1.5; max-width:260px;">${n.comment||''}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }catch(e){
+    container.innerHTML = '<div class="empty-state">Couldn\'t reach live notes right now — check your connection.</div>';
+  }
+}
+
+function openTeam(abbr){
+  selectedTeam = STANDINGS.find(t=>t.team.abbreviation===abbr);
+  if(!selectedTeam) return;
+  const t = selectedTeam;
+  const content = document.getElementById('teamDetailContent');
+  content.innerHTML = `
+    <div class="team-hero" style="background:${teamGrad(abbr)}22; border:1px solid ${TEAM_COLORS[abbr]?.[0]||'#3FD16D'}44;">
+      <div class="team-hero-crest" style="background:${teamGrad(abbr)}">${abbr}</div>
+      <div class="team-hero-name">${t.team.name}</div>
+      <div class="team-hero-meta">${t.conference} ${t.division} · Rank #${t.rank?.division||'—'} in division</div>
+      <div class="team-hero-record">
+        <div class="hero-stat"><div class="hero-stat-val">${t.wins}</div><div class="hero-stat-label">Wins</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">${t.losses}</div><div class="hero-stat-label">Losses</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">${(t.win_percentage*100).toFixed(0)}%</div><div class="hero-stat-label">Win Rate</div></div>
+      </div>
+    </div>
+    <div class="section-label">Playoff Outlook</div>
+    <div class="matchup-card">
+      <div style="font-size:13px; color:var(--steel); line-height:1.6;">
+        ${playoffBlurb(t)}
+      </div>
+    </div>
+    <div class="section-label">Trophy Case</div>
+    <div class="matchup-card" style="display:flex; justify-content:space-around; text-align:center; padding:16px 8px;">
+      <div><div class="hero-stat-val" style="font-size:30px;">🏆 ${TROPHIES[abbr]?.sb ?? 0}</div><div class="hero-stat-label">Super Bowls</div></div>
+      <div><div class="hero-stat-val" style="font-size:30px;">${TROPHIES[abbr]?.conf ?? 0}</div><div class="hero-stat-label">Conf. Titles</div></div>
+      <div><div class="hero-stat-val" style="font-size:30px;">${TROPHIES[abbr]?.div ?? 0}</div><div class="hero-stat-label">Division Titles</div></div>
+    </div>
+
+    <div class="section-label">Season Schedule <span style="color:var(--turf); font-size:11px;">● LIVE</span></div>
+    <div id="teamSchedule">
+      <div class="loader-wrap" style="padding:24px;"><div class="spinner"></div><div class="loader-text">Pulling the full schedule…</div></div>
+    </div>
+
+    <div class="section-label">Latest Team Notes <span style="color:var(--turf); font-size:11px;">● LIVE</span></div>
+    <div id="teamLiveNotes">
+      <div class="loader-wrap" style="padding:24px;"><div class="spinner"></div><div class="loader-text">Pulling the latest ${t.team.name} notes…</div></div>
+    </div>
+
+    <div class="section-label">Key Players & Stats</div>
+    ${renderRoster(abbr)}
+    <div class="model-badge">${['LA','PIT','IND','NYJ','LV','DAL','GB'].includes(abbr) ? 'Verified via live search · Jul 27, 2026' : 'Best-effort snapshot · ask Claude to verify any player'}</div>
+  `;
+  showView('team');
+  loadTeamLiveNotes(abbr);
+  loadTeamSchedule(abbr);
+}
+
+const TEAM_SCHEDULE_BASE_URL = 'https://nfl-live-data.vercel.app/api/team-schedule';
+
+async function loadTeamSchedule(abbr){
+  const container = document.getElementById('teamSchedule');
+  if(!container) return;
+  try{
+    const res = await fetch(`${TEAM_SCHEDULE_BASE_URL}?team=${abbr}`, { cache: 'no-store' });
+    const games = await res.json();
+    if(!Array.isArray(games) || games.length === 0){
+      container.innerHTML = '<div class="empty-state">Schedule not available right now.</div>';
+      return;
+    }
+    container.innerHTML = games.map(g => {
+      const vsAt = g.homeAway === 'home' ? 'vs' : '@';
+      let resultBadge = '';
+      if(g.status === 'final'){
+        const color = g.result === 'W' ? 'var(--turf)' : g.result === 'L' ? 'var(--danger)' : 'var(--steel)';
+        resultBadge = `<span style="color:${color}; font-weight:700;">${g.result} ${g.selfScore}-${g.opponentScore}</span>`;
+      } else if(g.status === 'inprogress'){
+        resultBadge = '<span style="color:var(--gold);">LIVE</span>';
+      } else {
+        resultBadge = '<span style="color:var(--steel-dim);">—</span>';
+      }
+      return `
+        <div class="player-card" style="cursor:default;">
+          <div class="player-left">
+            <div class="player-num">${g.week ?? '—'}</div>
+            <div>
+              <div class="player-name">${vsAt} ${g.opponent}</div>
+              <div class="player-pos">${g.local_date}</div>
+            </div>
+          </div>
+          <div class="player-stat-line" style="font-size:14px;">${resultBadge}</div>
+        </div>
+      `;
+    }).join('');
+  }catch(e){
+    container.innerHTML = '<div class="empty-state">Couldn\'t reach the schedule right now.</div>';
+  }
+}
+
+function notifyToggle(abbr){
+  const isOn = localStorage.getItem('notify_'+abbr) === '1';
+  return `<div class="notify-toggle ${isOn?'on':''}" onclick="event.stopPropagation(); toggleNotify('${abbr}', this)"><div class="notify-toggle-knob"></div></div>`;
+}
+
+async function toggleNotify(abbr, el){
+  const key = 'notify_'+abbr;
+  const isOn = localStorage.getItem(key) === '1';
+  if(!isOn){
+    // Turning on — ask for browser notification permission
+    if('Notification' in window && Notification.permission !== 'granted'){
+      const perm = await Notification.requestPermission();
+      if(perm !== 'granted'){ return; } // don't flip UI if denied
+    }
+    localStorage.setItem(key, '1');
+    el.classList.add('on');
+    if('Notification' in window && Notification.permission === 'granted'){
+      new Notification('NFL by Nico alerts on', { body: `You'll get a recap after every ${abbr} game.` });
+    }
+  } else {
+    localStorage.removeItem(key);
+    el.classList.remove('on');
+  }
+  updateNewsBadge();
+  renderMyTeamsRow();
+}
+
+function playoffBlurb(t){
+  const clinch = t.rank?.clinched;
+  if(clinch === 'division') return `${t.team.name} have clinched the ${t.division} division title.`;
+  if(clinch === 'conference') return `${t.team.name} have clinched the top seed in the ${t.conference}.`;
+  if(clinch === 'wildcard') return `${t.team.name} have clinched a wild card playoff berth.`;
+  if(clinch === 'eliminated') return `${t.team.name} have been eliminated from playoff contention this season.`;
+  return `${t.team.name} are still in the hunt — playoff seeding is not yet determined.`;
+}
+
+function playerCard(pl, withStats){
+  return `
+    <div class="player-card" style="${pl.inj ? 'border-color: rgba(229,72,77,0.35);' : ''}">
+      <div class="player-left">
+        <div class="player-num">${(pl.p||'').split(' ')[0]}</div>
+        <div>
+          <div class="player-name">${pl.n} ${pl.inj ? '<span title="Injured">🩹</span>' : ''}</div>
+          <div class="player-pos">${pl.p}</div>
+          ${pl.inj ? `<div style="font-size:10px; color: var(--danger); margin-top:3px; max-width:200px; line-height:1.4;">${pl.inj}</div>` : ''}
+          ${pl.note ? `<div style="font-size:10px; color: var(--gold); margin-top:3px; max-width:200px; line-height:1.4;">${pl.note}</div>` : ''}
+        </div>
+      </div>
+      ${withStats && pl.s ? `<div><div class="player-stat-line">${pl.s}</div><div class="player-stat-sub">${pl.u||''}</div></div>` : ''}
+    </div>
+  `;
+}
+
+function renderRoster(abbr){
+  if(abbr === 'LA'){
+    return Object.entries(RAMS_FULL_ROSTER).map(([group, players])=>`
+      <div class="section-label" style="margin-top:16px;">${group}</div>
+      ${players.map(pl=>playerCard(pl, false)).join('')}
+    `).join('');
+  }
+  const roster = ROSTERS[abbr];
+  const defense = DEFENSE_ST[abbr];
+  if((!roster || !roster.length) && (!defense || !defense.length)){
+    return '<div class="empty-state">🏈 No player data loaded for this team yet. Ask Claude in chat to add it.</div>';
+  }
+  let html = '';
+  if(roster && roster.length){
+    html += `<div class="section-label" style="margin-top:16px;">Offense</div>` + roster.map(pl=>playerCard(pl, true)).join('');
+  }
+  if(defense && defense.length){
+    html += `<div class="section-label" style="margin-top:16px;">Defense & Special Teams</div>` + defense.map(pl=>playerCard(pl, false)).join('');
+  }
+  return html;
+}
+
+const GAME_SUMMARY_BASE_URL = 'https://nfl-live-data.vercel.app/api/game-summary';
+let gameDetailPoll = null;
+let gameDetailCurrentId = null;
+
+async function openGameDetail(gameId, home, away){
+  showView('gamedetail');
+  gameDetailCurrentId = gameId;
+  if(gameDetailPoll) clearInterval(gameDetailPoll);
+
+  const content = document.getElementById('gameDetailContent');
+  content.innerHTML = `
+    <div class="matchup-card">
+      <div class="matchup-top">
+        <div class="matchup-team">
+          <div class="matchup-crest" style="background:${teamGrad(away)}">${away}</div>
+          <div class="matchup-abbr">${away}</div>
+        </div>
+        <div class="matchup-team">
+          <div class="matchup-crest" style="background:${teamGrad(home)}">${home}</div>
+          <div class="matchup-abbr">${home}</div>
+        </div>
+      </div>
+      <div id="liveWinProbability"></div>
+    </div>
+    <div class="section-label">Team Stats</div>
+    <div id="boxScoreContent"><div class="loader-wrap" style="padding:24px;"><div class="spinner"></div><div class="loader-text">Pulling the box score…</div></div></div>
+  `;
+
+  await refreshGameDetail(gameId, home, away);
+  // Keep it updating live every 20s while this screen stays open — but only
+  // for as long as the person is still looking at THIS specific game.
+  gameDetailPoll = setInterval(() => {
+    const stillOnThisGame = gameDetailCurrentId === gameId &&
+      document.getElementById('view-gamedetail').classList.contains('active');
+    if(!stillOnThisGame){ clearInterval(gameDetailPoll); return; }
+    refreshGameDetail(gameId, home, away);
+  }, 20000);
+}
+
+async function refreshGameDetail(gameId, home, away){
+  const wpContainer = document.getElementById('liveWinProbability');
+  const box = document.getElementById('boxScoreContent');
+  try{
+    const res = await fetch(`${GAME_SUMMARY_BASE_URL}?id=${gameId}`, { cache: 'no-store' });
+    const data = await res.json();
+
+    // Win probability
+    if(wpContainer){
+      const wp = data.winProbability;
+      if(wp){
+        const favHome = wp.home >= wp.away;
+        wpContainer.innerHTML = `
+          <div class="prob-labels" style="margin-top:14px;">
+            <span class="${!favHome?'lead':''}">${wp.away}%</span>
+            <span class="${favHome?'lead':''}">${wp.home}%</span>
+          </div>
+          <div class="prob-bar">
+            <div class="${favHome?'prob-fill-b':'prob-fill-a'}" style="width:${wp.away}%"></div>
+            <div class="${favHome?'prob-fill-a':'prob-fill-b'}" style="width:${wp.home}%"></div>
+          </div>
+          <div class="matchup-note">Live win probability, updates automatically during the game</div>
+        `;
+      } else {
+        wpContainer.innerHTML = '<div class="matchup-note" style="text-align:center;">Win probability appears once the game kicks off</div>';
+      }
+    }
+
+    const teams = data.teams || [];
+    const awayTeam = teams.find(t => t.team === away);
+    const homeTeam = teams.find(t => t.team === home);
+
+    if(!awayTeam || !homeTeam || (!awayTeam.stats.length && !homeTeam.stats.length)){
+      box.innerHTML = '<div class="empty-state">Stats aren\'t available yet — they show up once the game kicks off.</div>';
+      return;
+    }
+
+    // Match up stats by name between the two teams so we can draw a comparison bar
+    const rows = awayTeam.stats.map(aStat => {
+      const hStat = homeTeam.stats.find(s => s.name === aStat.name);
+      if(!hStat) return null;
+      const aNum = parseFloat(String(aStat.value).replace(/[^0-9.]/g, ''));
+      const hNum = parseFloat(String(hStat.value).replace(/[^0-9.]/g, ''));
+      const bothNumeric = !isNaN(aNum) && !isNaN(hNum) && (aNum + hNum) > 0;
+      const aPct = bothNumeric ? Math.round((aNum / (aNum + hNum)) * 100) : 50;
+      return { label: aStat.label || aStat.name, aVal: aStat.value, hVal: hStat.value, aPct, bothNumeric };
+    }).filter(Boolean);
+
+    if(rows.length === 0){
+      box.innerHTML = '<div class="empty-state">Stats aren\'t available yet — they show up once the game kicks off.</div>';
+      return;
+    }
+
+    box.innerHTML = rows.map(r => `
+      <div class="stat-row">
+        <div class="stat-row-name">${r.label}</div>
+        <div class="stat-row-labels"><span>${r.aVal}</span><span>${r.hVal}</span></div>
+        ${r.bothNumeric ? `
+          <div class="stat-bar-track">
+            <div class="stat-bar-a" style="width:${r.aPct}%"></div>
+            <div class="stat-bar-b" style="width:${100-r.aPct}%"></div>
+          </div>` : ''}
+      </div>
+    `).join('');
+  }catch(e){
+    box.innerHTML = '<div class="empty-state">Couldn\'t reach the box score right now.</div>';
+  }
+}
+
+// ============== PREDICTIONS (transparent model) ==============
+function renderLiveGameTracker(){
+  const tracker = document.getElementById('liveGameTracker');
+  const live = SCHEDULE.find(g => g.status === 'inprogress');
+  if(!live){
+    tracker.innerHTML = `
+      <div class="live-card" style="opacity:0.7;">
+        <div style="font-size:11px; color:var(--steel-dim); text-align:center; padding:6px 0;">
+          🏈 No live games right now — once kickoff happens, live score, possession, down & distance show up here.
+        </div>
+      </div>`;
+    return;
+  }
+  const pct = Math.min(100, Math.max(0, live.yard_line_pct ?? 50));
+  tracker.innerHTML = `
+    <div class="live-card" onclick="openGameDetail('${live.id}','${live.home}','${live.away}')" style="cursor:pointer;">
+      <div class="live-tag">LIVE · Q${live.quarter||1} ${live.clock||''}</div>
+      <div class="score-bug">
+        <div class="score-team">
+          <div class="score-crest" style="background:${teamGrad(live.away)}">${live.away}</div>
+          <div class="score-val">${live.away_score ?? 0}</div>
+          ${live.possession===live.away ? '<span class="possession-dot"></span>' : ''}
+        </div>
+        <div class="score-mid">VS</div>
+        <div class="score-team">
+          ${live.possession===live.home ? '<span class="possession-dot"></span>' : ''}
+          <div class="score-val">${live.home_score ?? 0}</div>
+          <div class="score-crest" style="background:${teamGrad(live.home)}">${live.home}</div>
+        </div>
+      </div>
+      <div class="field-wrap">
+        <div class="field-strip"><div class="field-marker" style="left:${pct}%"></div></div>
+        <div class="field-labels"><span>${live.away}</span><span>50</span><span>${live.home}</span></div>
+      </div>
+      <div class="down-distance">${live.down||1}${live.down===1?'st':live.down===2?'nd':live.down===3?'rd':'th'} & ${live.distance||10} at the ${live.yard_line_label||'—'}</div>
+    </div>`;
+}
+
+let predictionsRendered = false;
+function winProbability(teamA, teamB){
+  // Simple, transparent logistic model based on win% differential + home-field nudge.
+  // Not real betting odds — clearly labeled in UI.
+  const pa = teamA.win_percentage ?? 0.5;
+  const pb = teamB.win_percentage ?? 0.5;
+  const diff = pa - pb;
+  const raw = 1 / (1 + Math.exp(-diff * 6)); // logistic squash
+  return Math.round(raw * 100);
+}
+
+function renderPredictions(){
+  predictionsRendered = true;
+  const el = document.getElementById('predictionsContent');
+  const upcoming = SCHEDULE.filter(g => g.status === 'scheduled');
+  if(!upcoming.length){
+    el.innerHTML = '<div class="empty-state">No upcoming games in the current snapshot.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="empty-state" style="padding:0 4px 14px; text-align:left;">🏈 We're in the preseason right now, so these are real upcoming preseason matchups — not regular-season games yet.</div>` +
+  upcoming.map(g=>{
+    const home = g.home, away = g.away;
+    let pctHome, pctAway;
+    if(g.win_probability){
+      pctHome = Math.round(g.win_probability[home] ?? 50);
+      pctAway = Math.round(g.win_probability[away] ?? 50);
+    } else {
+      const th = LAST_SEASON_STANDINGS.find(t=>t.team.abbreviation===home);
+      const ta = LAST_SEASON_STANDINGS.find(t=>t.team.abbreviation===away);
+      pctHome = winProbability(th||{win_percentage:0.5}, ta||{win_percentage:0.5});
+      pctAway = 100-pctHome;
+    }
+    const favHome = pctHome>=pctAway;
+    const stadium = TEAM_STADIUMS[home] || 'Venue TBD';
+    const date = new Date(g.start_time);
+    const dateStr = date.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
+    return `
+    <div class="matchup-card" onclick="openGameDetail('${g.id}','${home}','${away}')" style="cursor:pointer;">
+      ${g.title ? `<div class="pill" style="margin-bottom:10px;">${g.title}</div>` : ''}
+      <div class="matchup-top">
+        <div class="matchup-team">
+          <div class="matchup-crest" style="background:${teamGrad(away)}">${away}</div>
+          <div class="matchup-abbr">${away}</div>
+        </div>
+        <div class="matchup-team">
+          <div class="matchup-crest" style="background:${teamGrad(home)}">${home}</div>
+          <div class="matchup-abbr">${home}</div>
+        </div>
+      </div>
+      <div class="prob-labels">
+        <span class="${!favHome?'lead':''}">${pctAway}%</span>
+        <span class="${favHome?'lead':''}">${pctHome}%</span>
+      </div>
+      <div class="prob-bar">
+        <div class="${favHome?'prob-fill-b':'prob-fill-a'}" style="width:${pctAway}%"></div>
+        <div class="${favHome?'prob-fill-a':'prob-fill-b'}" style="width:${pctHome}%"></div>
+      </div>
+      <div class="matchup-note">🏟️ ${stadium} · ${dateStr}, ${g.local_start.split(', ')[1]||''}</div>
+    </div>`;
+  }).join('') + `<div class="model-badge">Win % is a simplified model, not Vegas odds</div>`;
+}
+
+// ============== LEADERS ==============
+// Real NFL news snapshot (as of July 26, 2026). Refresh by asking Claude to
+// regenerate this file with the latest headlines.
+const NEWS_ITEMS = [
+  {type:'news', team:'LA', headline:'Rams report to training camp', body:'Los Angeles began training camp on July 26 at Loyola Marymount University, running through August 7. DraftKings lists the Rams as Super Bowl favorites entering the season.', date:'Jul 26'},
+  {type:'news', team:'LA', headline:'Aaron Donald mulling a comeback', body:'Sean McVay said former Rams DT Aaron Donald, retired since March 2024, is seriously weighing an unretirement bid after LA traded for Myles Garrett. No decision has been made.', date:'Jul 25'},
+  {type:'signing', team:'LA', headline:'Ty Simpson signs rookie deal', body:"Rookie QB Ty Simpson (Rams' No. 13 pick) signed his rookie contract, wrapping up signings for the entire 2026 first-round draft class.", date:'Jul 25'},
+  {type:'news', team:'LA', headline:'Stafford healthy entering camp', body:"Matthew Stafford is healthy heading into camp, a contrast to last year when a back injury cost him most of camp. McVay said he'll still get a modified practice schedule.", date:'Jul 25'},
+  {type:'news', team:'LA', headline:'Alaric Jackson arrested on domestic violence charge', body:"Rams starting LT Alaric Jackson was arrested June 9 on a felony domestic violence charge and released on $50,000 bond. The team said it's aware of the situation and takes it seriously; the legal case is ongoing.", date:'Jun 9'},
+  {type:'trade', team:'NE', headline:'Patriots land A.J. Brown', body:'New England acquired star WR A.J. Brown from the Eagles for a 2027 5th and a 2028 first-round pick.', date:'Jun 2026'},
+  {type:'trade', team:'CIN', headline:'Bengals trade for Dexter Lawrence', body:"Cincinnati sent the No. 10 overall pick in the 2026 draft to the Giants for star DT Dexter Lawrence.", date:'Apr 2026'},
+  {type:'trade', team:'DEN', headline:'Broncos land Jaylen Waddle', body:'Denver acquired WR Jaylen Waddle from Miami for a package of 2026 picks.', date:'Mar 2026'},
+  {type:'trade', team:'BUF', headline:'Bills add D.J. Moore', body:'Buffalo acquired WR D.J. Moore from the Bears for a 2026 second-round pick.', date:'2026 offseason'},
+  {type:'trade', team:'DAL', headline:'Cowboys stack the front seven', body:'Dallas added EDGE Rashan Gary from the Packers and LB Dee Winters from the 49ers, continuing their post-Parsons rebuild.', date:'Jun 2026'},
+  {type:'trade', team:'NYJ', headline:'Jets and Titans swap defensive linemen', body:"The Jets sent EDGE Jermaine Johnson II to Tennessee in exchange for DL T'Vondre Sweat.", date:'2026 offseason'},
+  {type:'trade', team:'PHI', headline:'Eagles add Jonathan Greenard', body:'Philadelphia acquired EDGE Jonathan Greenard from the Vikings for a pair of Day 2 picks.', date:'Apr 2026'},
+  {type:'trade', team:'PIT', headline:'Steelers trade for Michael Pittman Jr.', body:'Pittsburgh acquired WR Michael Pittman Jr. from the Colts for a swap of late-round picks. He signed a 3-year, $58M extension with the Steelers immediately after.', date:'Mar 2026'},
+  {type:'news', team:'IND', headline:'Daniel Jones locks down Colts QB1 job', body:'Daniel Jones beat out Anthony Richardson for the starting job in 2025 and has held it since, re-signing with Indianapolis in March 2026.', date:'Mar 2026'},
+  {type:'news', team:'NYJ', headline:'Jets move on from Justin Fields, sign Geno Smith', body:"After a rough 2025, the Jets are expected to release Justin Fields and hand the reins to Geno Smith, who left the Raiders in free agency.", date:'Mar 2026'},
+  {type:'news', team:'LV', headline:'Raiders bring in Kirk Cousins', body:'With Geno Smith departing for the Jets, the Raiders signed veteran Kirk Cousins, who is expected to start ahead of rookie first-overall pick Fernando Mendoza.', date:'Mar 2026'},
+  {type:'injury', team:'SF', headline:'Kyle Shanahan out to start training camp', body:"49ers HC Kyle Shanahan is recovering from a concussion after a car accident in mid-July and will miss the start of camp. He's expected back at some point during camp.", date:'Jul 26'},
+  {type:'injury', team:'KC', headline:'Mahomes cleared for training camp', body:'Patrick Mahomes confirmed he\'s cleared to practice at the start of camp, coming off a torn ACL and LCL suffered in December.', date:'Jul 25'},
+  {type:'injury', team:'SF', headline:'Kittle to open camp on the sideline', body:'George Kittle will sit out the start of training camp as he continues recovering from a torn Achilles suffered in January.', date:'Jul 25'},
+  {type:'trade', team:'KC', headline:'McDuffie traded to the Rams', body:'The Chiefs sent All-Pro corner Trent McDuffie to the Rams for four draft picks, including a 2026 first-rounder. McDuffie signed a 4-year, $124M extension with LA immediately after.', date:'Mar 2026'},
+  {type:'trade', team:'CLE', headline:'Garrett traded to the Rams', body:'The Browns sent two-time Defensive Player of the Year Myles Garrett to Los Angeles in exchange for Jared Verse plus future draft capital.', date:'Jun 2026'},
+  {type:'signing', team:'ARI', headline:'Cardinals rework Brissett\'s deal', body:'Arizona and QB Jacoby Brissett agreed to a reworked one-year contract worth up to $21.5M, ending a lingering camp holdout.', date:'Jul 26'},
+  {type:'news', team:'NO', headline:'Olave extension talks continue', body:"The Saints and WR Chris Olave are still working on a contract extension. He isn't expected to miss any time as talks continue.", date:'Jul 25'},
+  {type:'injury', team:'BAL', headline:'Madubuike placed on PUP list', body:'Ravens DT Nnamdi Madubuike was placed on the physically unable to perform list, though only expected to be sidelined briefly.', date:'Jul 25'},
+  {type:'news', team:'NE', headline:'Patriots shuffle O-line, add depth WR', body:'New England waived an offensive lineman and claimed a wide receiver/return specialist off waivers from Carolina as camp roster battles continue.', date:'Jul 25'}
+];
+
+function newsIcon(type){
+  if(type==='trade') return '🔄';
+  if(type==='injury') return '🩹';
+  if(type==='signing') return '✍️';
+  return '📰';
+}
+function newsLabel(type){
+  if(type==='trade') return 'TRADE';
+  if(type==='injury') return 'INJURY';
+  if(type==='signing') return 'SIGNING';
+  return 'NEWS';
+}
+
+// ---- Followed-team notifications ----
+function getFollowedTeams(){
+  const teams = [];
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith('notify_') && localStorage.getItem(key)==='1'){
+      teams.push(key.replace('notify_',''));
+    }
+  }
+  return teams;
+}
+
+function getSeenNewsIds(){
+  try{ return JSON.parse(localStorage.getItem('seen_news_ids') || '[]'); }catch(e){ return []; }
+}
+
+function updateNewsBadge(){
+  const followed = getFollowedTeams();
+  const seen = getSeenNewsIds();
+  const hasUnseen = NEWS_ITEMS.some((item, i) => followed.includes(item.team) && !seen.includes(i));
+  document.getElementById('newsBadge').style.display = hasUnseen ? 'block' : 'none';
+}
+
+let newsRendered = false;
+async function renderNews(){
+  newsRendered = true;
+  const followed = getFollowedTeams();
+  const el = document.getElementById('newsContent');
+
+  // Live section — only for teams you've turned notifications on for,
+  // fetched fresh from ESPN every time this tab opens.
+  let liveHtml = '';
+  if(followed.length > 0){
+    liveHtml += `<div class="section-label" style="margin:0 0 8px;">Live Updates <span style="color:var(--turf); font-size:11px;">● Teams you follow</span></div>
+      <div id="liveFollowedNews"><div class="loader-wrap" style="padding:16px;"><div class="spinner"></div><div class="loader-text">Checking your teams…</div></div></div>
+      <div class="section-label" style="margin-top:20px;">Recent Headlines</div>`;
+  }
+
+  el.innerHTML = liveHtml + `<div class="empty-state" style="padding:0 4px 12px; text-align:left;">📰 Snapshot from the last time Claude checked the wire — ask for a refresh any time.</div>` +
+  NEWS_ITEMS.map((item, i)=>`
+    <div class="player-card" style="align-items:flex-start; cursor:default; ${followed.includes(item.team) ? 'border-color: rgba(63,209,109,0.4);' : ''}">
+      <div class="player-left" style="align-items:flex-start;">
+        <div class="player-num" style="background:${teamGrad(item.team)}; color:#fff;">${newsIcon(item.type)}</div>
+        <div>
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px; flex-wrap:wrap;">
+            <span class="pill" style="font-size:9px; padding:2px 7px;">${newsLabel(item.type)}</span>
+            <span class="pill" style="font-size:9px; padding:2px 7px;">${item.team}</span>
+            ${followed.includes(item.team) ? '<span class="news-followed-tag">🔔 Following</span>' : ''}
+          </div>
+          <div class="player-name" style="margin-bottom:3px;">${item.headline}</div>
+          <div class="player-pos" style="line-height:1.5; max-width:260px;">${item.body}</div>
+        </div>
+      </div>
+      <div class="player-stat-sub" style="white-space:nowrap;">${item.date}</div>
+    </div>
+  `).join('');
+
+  // Fetch live notes for each followed team, in parallel, after the static
+  // content is already visible — this section fills in a moment later.
+  if(followed.length > 0){
+    try{
+      const results = await Promise.all(followed.map(async abbr => {
+        try{
+          const res = await fetch(`${TEAM_NOTES_BASE_URL}?team=${abbr}`, { cache: 'no-store' });
+          const notes = await res.json();
+          return { abbr, notes: Array.isArray(notes) ? notes : [] };
+        }catch(e){ return { abbr, notes: [] }; }
+      }));
+      const liveContainer = document.getElementById('liveFollowedNews');
+      if(!liveContainer) return; // user navigated away before this resolved
+      const allNotes = results.flatMap(r => r.notes.map(n => ({ ...n, team: r.abbr })));
+      if(allNotes.length === 0){
+        liveContainer.innerHTML = '<div class="empty-state">No live updates for your followed teams right now.</div>';
+        return;
+      }
+      liveContainer.innerHTML = allNotes.map(n => `
+        <div class="player-card" style="align-items:flex-start; cursor:default; ${n.status && n.status.toLowerCase() !== 'active' ? 'border-color: rgba(229,72,77,0.35);' : 'border-color: rgba(63,209,109,0.4);'}">
+          <div class="player-left" style="align-items:flex-start;">
+            <div class="player-num" style="background:${teamGrad(n.team)}; color:#fff;">${n.status && n.status.toLowerCase() !== 'active' ? '🩹' : '📝'}</div>
+            <div>
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                <span class="pill" style="font-size:9px;">${n.team}</span>
+                <span class="pill" style="font-size:9px;">${n.status||''}</span>
+              </div>
+              <div class="player-name" style="margin-bottom:3px;">${n.name}</div>
+              <div class="player-pos" style="line-height:1.5; max-width:260px;">${n.comment||''}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }catch(e){
+      const liveContainer = document.getElementById('liveFollowedNews');
+      if(liveContainer) liveContainer.innerHTML = '<div class="empty-state">Couldn\'t reach live updates right now.</div>';
+    }
+  }
+
+  // Opening the tab marks all currently-followed teams' news as seen, clearing the badge
+  const seen = getSeenNewsIds();
+  NEWS_ITEMS.forEach((item, i) => { if(followed.includes(item.team) && !seen.includes(i)) seen.push(i); });
+  localStorage.setItem('seen_news_ids', JSON.stringify(seen));
+  updateNewsBadge();
+}
+
+// ============== INIT ==============
+loadData();
+loadSchedule();
+
+// Auto-refresh scores every 20 seconds so a live game updates without
+// needing to close/reopen the app. Only fetches — doesn't reload the page.
+setInterval(loadSchedule, 20000);
+updateNewsBadge();
+</script>
+</body>
+</html>
