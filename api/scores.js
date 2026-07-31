@@ -1,6 +1,15 @@
+function dateRangeParam(daysAhead){
+  const fmt = d => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  const start = new Date();
+  const end = new Date();
+  end.setDate(end.getDate() + daysAhead);
+  return `${fmt(start)}-${fmt(end)}`;
+}
+
 export default async function handler(req, res) {
   try {
-    const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
+    const range = dateRangeParam(30);
+    const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${range}`);
     const raw = await response.json();
     const events = raw.events || [];
 
